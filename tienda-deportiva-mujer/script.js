@@ -1,0 +1,262 @@
+// ==================== DATA ====================
+import { PRODUCTS } from './data/products.js';
+
+const fmt = n => '$' + n.toLocaleString('es-AR');
+const CART_KEY = 'velvet_cart';
+
+// ==================== STATE ====================
+let cart = loadCart();
+let activeFilter = 'all';
+
+function loadCart() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(CART_KEY));
+    return Array.isArray(stored) ? stored : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveCart() {
+  localStorage.setItem(CART_KEY, JSON.stringify(cart));
+}
+
+// ==================== RENDER PRODUCTS ====================
+const productGrid = document.getElementById('productGrid');
+
+function renderProducts() {
+  const list = activeFilter === 'all' ? PRODUCTS : PRODUCTS.filter(p => p.cat === activeFilter);
+  productGrid.innerHTML = list.map(p => `
+    <div class="product-card" data-id="${p.id}">
+      <div class="product-card__img">
+        ${p.badge ? `<span class="product-badge">${p.badge}</span>` : ''}
+        <button class="product-fav" data-fav="${p.id}" aria-label="Favorito">♡</button>
+        <div class="img-fallback" style="background:${p.color}"></div>
+      </div>
+      <div class="product-card__body">
+        <span class="product-cat">${p.cat}</span>
+        <h3>${p.name}</h3>
+        <div class="product-price-row">
+          <span class="product-price">${p.oldPrice ? `<small>${fmt(p.oldPrice)}</small>` : ''}${fmt(p.price)}</span>
+          <button class="add-btn" data-add="${p.id}" aria-label="Agregar al carrito">+</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+renderProducts();
+
+// ==================== FILTERS ====================
+document.getElementById('filters').addEventListener('click', e => {
+  const btn = e.target.closest('.filter-btn');
+  if (!btn) return;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  activeFilter = btn.dataset.filter;
+  renderProducts();
+});
+
+// Category cards trigger a filter + scroll (handled by anchor + this listener)
+document.querySelectorAll('.cat-card').forEach(card => {
+  card.addEventListener('click', () => {
+    const filter = card.dataset.filter;
+    activeFilter = filter;
+    document.querySelectorAll('.filter-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.filter === filter);
+    });
+    renderProducts();
+  });
+});
+
+// ==================== FAVORITES ====================
+productGrid.addEventListener('click', e => {
+  const favBtn = e.target.closest('[data-fav]');
+  if (favBtn) {
+    favBtn.classList.toggle('active');
+    favBtn.textContent = favBtn.classList.contains('active') ? '♥' : '♡';
+    return;
+  }
+  const addBtn = e.target.closest('[data-add]');
+  if (addBtn) {
+    const id = Number(addBtn.dataset.add);
+    addToCart(id);
+  }
+});
+
+// ==================== CART ====================
+const cartPanel = document.getElementById('cartPanel');
+const cartOverlay = document.getElementById('cartOverlay');
+const cartItemsEl = document.getElementById('cartItems');
+const cartCountEl = document.getElementById('cartCount');
+const cartTotalEl = document.getElementById('cartTotal');
+
+function addToCart(id) {
+  const product = PRODUCTS.find(p => p.id === id);
+  const existing = cart.find(i => i.id === id);
+  if (existing) {
+    existing.qty++;
+  } else {
+    cart.push({ ...product, qty: 1 });
+  }
+  saveCart();
+  renderCart();
+  showToast(`${product.name} agregado al carrito`);
+  openCart();
+}
+
+function changeQty(id, delta) {
+  const item = cart.find(i => i.id === id);
+  if (!item) return;
+  item.qty += delta;
+  if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
+  saveCart();
+  renderCart();
+}
+
+function removeFromCart(id) {
+  cart = cart.filter(i => i.id !== id);
+  saveCart();
+  renderCart();
+}
+
+function renderCart() {
+  const totalItems = cart.reduce((s, i) => s + i.qty, 0);
+  const totalPrice = cart.reduce((s, i) => s + i.qty * i.price, 0);
+  cartCountEl.textContent = totalItems;
+  cartTotalEl.textContent = fmt(totalPrice);
+
+  if (cart.length === 0) {
+    cartItemsEl.innerHTML = '<p class="cart-empty">Tu carrito está vacío</p>';
+    return;
+  }
+
+  cartItemsEl.innerHTML = cart.map(item => `
+    <div class="cart-item" data-id="${item.id}">
+      <div class="cart-item__img" style="background:${item.color}"></div>
+      <div class="cart-item__info">
+        <h4>${item.name}</h4>
+        <span>${item.cat}</span>
+        <div class="cart-item__row">
+          <div class="qty-control">
+            <button data-qty="minus" data-id="${item.id}">−</button>
+            <span>${item.qty}</span>
+            <button data-qty="plus" data-id="${item.id}">+</button>
+          </div>
+          <span class="cart-item__price">${fmt(item.qty * item.price)}</span>
+        </div>
+        <button class="cart-item__remove" data-remove="${item.id}">Eliminar</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+renderCart();
+
+cartItemsEl.addEventListener('click', e => {
+  const qtyBtn = e.target.closest('[data-qty]');
+  if (qtyBtn) {
+    const id = Number(qtyBtn.dataset.id);
+    changeQty(id, qtyBtn.dataset.qty === 'plus' ? 1 : -1);
+    return;
+  }
+  const removeBtn = e.target.closest('[data-remove]');
+  if (removeBtn) removeFromCart(Number(removeBtn.dataset.remove));
+});
+
+function openCart() {
+  cartPanel.classList.add('active');
+  cartOverlay.classList.add('active');
+}
+function closeCart() {
+  cartPanel.classList.remove('active');
+  cartOverlay.classList.remove('active');
+}
+
+document.getElementById('cartToggle').addEventListener('click', openCart);
+document.getElementById('cartClose').addEventListener('click', closeCart);
+cartOverlay.addEventListener('click', closeCart);
+
+const checkoutBtn = document.getElementById('checkoutBtn');
+
+checkoutBtn.addEventListener('click', async () => {
+  if (cart.length === 0) {
+    showToast('Tu carrito está vacío');
+    return;
+  }
+
+  checkoutBtn.disabled = true;
+  checkoutBtn.textContent = 'Procesando...';
+
+  try {
+    const res = await fetch('/api/create-preference', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        items: cart.map(item => ({ id: item.id, qty: item.qty })),
+      }),
+    });
+
+    if (!res.ok) throw new Error('create-preference failed');
+
+    const data = await res.json();
+    window.location.href = data.init_point;
+  } catch (err) {
+    showToast('Hubo un problema al iniciar el pago. Intentá de nuevo.');
+    checkoutBtn.disabled = false;
+    checkoutBtn.textContent = 'Finalizar compra';
+  }
+});
+
+// ==================== SEARCH ====================
+const searchBar = document.getElementById('searchBar');
+document.getElementById('searchToggle').addEventListener('click', () => {
+  searchBar.classList.toggle('active');
+  if (searchBar.classList.contains('active')) {
+    setTimeout(() => document.getElementById('searchInput').focus(), 200);
+  }
+});
+document.getElementById('searchClose').addEventListener('click', () => searchBar.classList.remove('active'));
+
+// ==================== MOBILE NAV ====================
+const nav = document.getElementById('nav');
+const hamburger = document.getElementById('hamburger');
+hamburger.addEventListener('click', () => {
+  nav.classList.toggle('active');
+  hamburger.classList.toggle('active');
+});
+document.querySelectorAll('.nav__link').forEach(link => {
+  link.addEventListener('click', () => nav.classList.remove('active'));
+});
+
+// ==================== HEADER HIDE ON SCROLL ====================
+let lastScroll = 0;
+const header = document.getElementById('header');
+window.addEventListener('scroll', () => {
+  const current = window.scrollY;
+  if (current > 200 && current > lastScroll) {
+    header.style.transform = 'translateY(-100%)';
+  } else {
+    header.style.transform = 'translateY(0)';
+  }
+  lastScroll = current;
+});
+
+// ==================== NEWSLETTER ====================
+document.getElementById('newsletterForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const email = document.getElementById('newsletterEmail').value;
+  const msg = document.getElementById('newsletterMsg');
+  msg.textContent = `¡Listo! Te suscribiste con ${email}`;
+  document.getElementById('newsletterForm').reset();
+  showToast('Suscripción exitosa 🎉');
+});
+
+// ==================== TOAST ====================
+let toastTimer;
+function showToast(text) {
+  const toast = document.getElementById('toast');
+  toast.textContent = text;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 2600);
+}

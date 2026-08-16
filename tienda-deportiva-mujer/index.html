@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VELVET — Ropa Deportiva de Mujer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Bebas+Neue&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<header class="header" id="header">
+  <div class="container header__inner">
+    <a href="#inicio" class="logo">velvet<span>.</span></a>
+
+    <nav class="nav" id="nav">
+      <a href="#inicio" class="nav__link">Inicio</a>
+      <a href="#categorias" class="nav__link">Categorías</a>
+      <a href="#productos" class="nav__link">Productos</a>
+      <a href="#nosotras" class="nav__link">Nosotras</a>
+      <a href="#contacto" class="nav__link">Contacto</a>
+    </nav>
+
+    <div class="header__actions">
+      <button class="icon-btn" id="searchToggle" aria-label="Buscar">
+        <svg viewBox="0 0 24 24"><path d="M21 21l-4.35-4.35m1.35-5.15a7.5 7.5 0 11-15 0 7.5 7.5 0 0115 0z" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+      </button>
+      <button class="icon-btn cart-btn" id="cartToggle" aria-label="Carrito">
+        <svg viewBox="0 0 24 24"><path d="M3 3h2l.4 2M7 13h10l3-8H5.4M7 13L5.4 5M7 13l-2.3 4.6A1 1 0 005.6 19H17M17 19a2 2 0 100 4 2 2 0 000-4zM9 19a2 2 0 100 4 2 2 0 000-4z" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="cart-count" id="cartCount">0</span>
+      </button>
+      <button class="hamburger" id="hamburger" aria-label="Menú">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+
+  <div class="search-bar" id="searchBar">
+    <div class="container search-bar__inner">
+      <input type="text" placeholder="Buscar leggings, tops, conjuntos..." id="searchInput">
+      <button id="searchClose">✕</button>
+    </div>
+  </div>
+</header>
+
+<!-- ===== HERO ===== -->
+<section class="hero" id="inicio">
+  <div class="hero__bg"></div>
+  <div class="container hero__inner">
+    <div class="hero__text">
+      <span class="hero__tag">NUEVA COLECCIÓN PRIMAVERA-VERANO</span>
+      <h1>MUÉVETE<br>CON <span>ACTITUD</span></h1>
+      <p>Ropa deportiva diseñada para mujeres que no se detienen. Rendimiento, comodidad y estilo en cada movimiento.</p>
+      <div class="hero__cta">
+        <a href="#productos" class="btn btn--primary">Comprar ahora</a>
+        <a href="#categorias" class="btn btn--outline">Ver colección</a>
+      </div>
+      <div class="hero__stats">
+        <div><strong>+15k</strong><span>Clientas felices</span></div>
+        <div><strong>200+</strong><span>Productos</span></div>
+        <div><strong>4.9★</strong><span>Valoración</span></div>
+      </div>
+    </div>
+  </div>
+  <a href="#categorias" class="scroll-down" aria-label="Bajar">↓</a>
+</section>
+
+<!-- ===== MARQUEE ===== -->
+<div class="marquee">
+  <div class="marquee__track">
+    <span>ENVÍO GRATIS +$50.000</span><span>•</span>
+    <span>CAMBIOS SIN COSTO</span><span>•</span>
+    <span>3 CUOTAS SIN INTERÉS</span><span>•</span>
+    <span>NUEVOS INGRESOS CADA SEMANA</span><span>•</span>
+    <span>ENVÍO GRATIS +$50.000</span><span>•</span>
+    <span>CAMBIOS SIN COSTO</span><span>•</span>
+    <span>3 CUOTAS SIN INTERÉS</span><span>•</span>
+    <span>NUEVOS INGRESOS CADA SEMANA</span><span>•</span>
+  </div>
+</div>
+
+<!-- ===== CATEGORÍAS ===== -->
+<section class="categories" id="categorias">
+  <div class="container">
+    <div class="section-head">
+      <span class="section-tag">Explorá</span>
+      <h2>Comprá por categoría</h2>
+    </div>
+    <div class="cat-grid">
+      <a href="#productos" class="cat-card cat-card--big" data-filter="conjuntos">
+        <div class="cat-card__img cat-img-1"></div>
+        <div class="cat-card__label"><h3>Conjuntos</h3><span>Ver más →</span></div>
+      </a>
+      <a href="#productos" class="cat-card" data-filter="leggings">
+        <div class="cat-card__img cat-img-2"></div>
+        <div class="cat-card__label"><h3>Leggings</h3><span>Ver más →</span></div>
+      </a>
+      <a href="#productos" class="cat-card" data-filter="tops">
+        <div class="cat-card__img cat-img-3"></div>
+        <div class="cat-card__label"><h3>Tops</h3><span>Ver más →</span></div>
+      </a>
+      <a href="#productos" class="cat-card" data-filter="running">
+        <div class="cat-card__img cat-img-4"></div>
+        <div class="cat-card__label"><h3>Running</h3><span>Ver más →</span></div>
+      </a>
+      <a href="#productos" class="cat-card" data-filter="yoga">
+        <div class="cat-card__img cat-img-5"></div>
+        <div class="cat-card__label"><h3>Yoga</h3><span>Ver más →</span></div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== BANNER ===== -->
+<section class="promo-banner">
+  <div class="container promo-banner__inner">
+    <div>
+      <span class="section-tag section-tag--light">Colección Training</span>
+      <h2>Rendí al máximo,<br>sentite increíble</h2>
+      <p>Tecnología de compresión y tela transpirable para tus entrenamientos más intensos.</p>
+      <a href="#productos" class="btn btn--primary">Descubrir</a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PRODUCTOS ===== -->
+<section class="products" id="productos">
+  <div class="container">
+    <div class="section-head">
+      <span class="section-tag">Catálogo</span>
+      <h2>Productos destacados</h2>
+    </div>
+
+    <div class="filters" id="filters">
+      <button class="filter-btn active" data-filter="all">Todos</button>
+      <button class="filter-btn" data-filter="conjuntos">Conjuntos</button>
+      <button class="filter-btn" data-filter="leggings">Leggings</button>
+      <button class="filter-btn" data-filter="tops">Tops</button>
+      <button class="filter-btn" data-filter="running">Running</button>
+      <button class="filter-btn" data-filter="yoga">Yoga</button>
+    </div>
+
+    <div class="product-grid" id="productGrid"></div>
+  </div>
+</section>
+
+<!-- ===== BENEFICIOS ===== -->
+<section class="benefits">
+  <div class="container benefits__grid">
+    <div class="benefit">
+      <div class="benefit__icon">🚚</div>
+      <h3>Envío gratis</h3>
+      <p>En compras superiores a $50.000</p>
+    </div>
+    <div class="benefit">
+      <div class="benefit__icon">↩️</div>
+      <h3>Cambios fáciles</h3>
+      <p>30 días para cambios sin costo</p>
+    </div>
+    <div class="benefit">
+      <div class="benefit__icon">💳</div>
+      <h3>Pago seguro</h3>
+      <p>Hasta 3 cuotas sin interés</p>
+    </div>
+    <div class="benefit">
+      <div class="benefit__icon">🌿</div>
+      <h3>Telas sustentables</h3>
+      <p>Materiales reciclados y eco-friendly</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== NOSOTRAS ===== -->
+<section class="about" id="nosotras">
+  <div class="container about__inner">
+    <div class="about__img"></div>
+    <div class="about__text">
+      <span class="section-tag">Nuestra historia</span>
+      <h2>Diseñado por mujeres, para mujeres activas</h2>
+      <p>VELVET nació en 2021 con una misión simple: crear ropa deportiva que acompañe cada tipo de movimiento femenino, desde una clase de yoga hasta un maratón. Cada prenda está pensada para calzar bien, durar mucho y hacerte sentir imparable.</p>
+      <p>Trabajamos con telas técnicas de alto rendimiento y procesos de producción responsables, porque creemos que verte bien y cuidar el planeta van de la mano.</p>
+      <div class="about__values">
+        <div><h4>100%</h4><span>Diseño propio</span></div>
+        <div><h4>Talles</h4><span>XS a XXL</span></div>
+        <div><h4>Eco</h4><span>Packaging reciclable</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== TESTIMONIOS ===== -->
+<section class="testimonials">
+  <div class="container">
+    <div class="section-head section-head--center">
+      <span class="section-tag">Testimonios</span>
+      <h2>Lo que dicen nuestras clientas</h2>
+    </div>
+    <div class="testi-grid">
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p>"La calidad de las telas es increíble, uso los leggings todos los días y no se transparentan ni pierden forma."</p>
+        <div class="testi-author"><div class="testi-avatar">MG</div><div><strong>Marina G.</strong><span>Compradora verificada</span></div></div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p>"Los conjuntos son hermosos y súper cómodos para entrenar. El envío llegó en 2 días, ¡recomendadísimo!"</p>
+        <div class="testi-author"><div class="testi-avatar">CL</div><div><strong>Camila L.</strong><span>Compradora verificada</span></div></div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p>"Por fin una marca que piensa en todos los talles. Me encanta la atención y la calidad de los productos."</p>
+        <div class="testi-author"><div class="testi-avatar">SR</div><div><strong>Sofía R.</strong><span>Compradora verificada</span></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== NEWSLETTER ===== -->
+<section class="newsletter">
+  <div class="container newsletter__inner">
+    <h2>Sumate a la comunidad VELVET</h2>
+    <p>Recibí novedades, descuentos exclusivos y tips de entrenamiento directo en tu correo.</p>
+    <form class="newsletter__form" id="newsletterForm">
+      <input type="email" placeholder="Tu correo electrónico" required id="newsletterEmail">
+      <button type="submit" class="btn btn--primary">Suscribirme</button>
+    </form>
+    <span class="newsletter__msg" id="newsletterMsg"></span>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer" id="contacto">
+  <div class="container footer__grid">
+    <div class="footer__col footer__brand">
+      <a href="#inicio" class="logo">velvet<span>.</span></a>
+      <p>Ropa deportiva para mujeres activas. Rendimiento, estilo y comodidad en cada movimiento.</p>
+      <div class="social">
+        <a href="#" aria-label="Instagram">IG</a>
+        <a href="#" aria-label="Facebook">FB</a>
+        <a href="#" aria-label="TikTok">TT</a>
+        <a href="#" aria-label="WhatsApp">WA</a>
+      </div>
+    </div>
+    <div class="footer__col">
+      <h4>Tienda</h4>
+      <a href="#productos">Conjuntos</a>
+      <a href="#productos">Leggings</a>
+      <a href="#productos">Tops</a>
+      <a href="#productos">Running</a>
+      <a href="#productos">Yoga</a>
+    </div>
+    <div class="footer__col">
+      <h4>Ayuda</h4>
+      <a href="#">Guía de talles</a>
+      <a href="#">Envíos y cambios</a>
+      <a href="#">Preguntas frecuentes</a>
+      <a href="#">Términos y condiciones</a>
+    </div>
+    <div class="footer__col">
+      <h4>Contacto</h4>
+      <p>hola@velvet.com</p>
+      <p>+54 11 5555-0199</p>
+      <p>Buenos Aires, Argentina</p>
+    </div>
+  </div>
+  <div class="footer__bottom">
+    <div class="container">
+      <p>© 2026 VELVET. Todos los derechos reservados.</p>
+    </div>
+  </div>
+</footer>
+
+<!-- ===== CARRITO LATERAL ===== -->
+<div class="cart-overlay" id="cartOverlay"></div>
+<aside class="cart-panel" id="cartPanel">
+  <div class="cart-panel__head">
+    <h3>Tu carrito</h3>
+    <button id="cartClose">✕</button>
+  </div>
+  <div class="cart-panel__items" id="cartItems">
+    <p class="cart-empty">Tu carrito está vacío</p>
+  </div>
+  <div class="cart-panel__footer">
+    <div class="cart-total"><span>Total</span><strong id="cartTotal">$0</strong></div>
+    <button class="btn btn--primary btn--full" id="checkoutBtn">Finalizar compra</button>
+  </div>
+</aside>
+
+<!-- ===== TOAST ===== -->
+<div class="toast" id="toast"></div>
+
+<script type="module" src="script.js"></script>
+</body>
+</html>
