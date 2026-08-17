@@ -423,7 +423,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: 0.5px; line-h
 .benefits { padding: 80px 0; background: var(--white); }
 .benefits__grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 30px;
   text-align: center;
 }
