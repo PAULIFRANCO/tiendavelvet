@@ -56,8 +56,8 @@ document.getElementById('filters').addEventListener('click', e => {
   renderProducts();
 });
 
-// Category cards trigger a filter + scroll (handled by anchor + this listener)
-document.querySelectorAll('.cat-card').forEach(card => {
+// Category cards and nav dropdown links trigger a filter + scroll (handled by anchor + this listener)
+document.querySelectorAll('.cat-card, .nav__dropdown a[data-filter]').forEach(card => {
   card.addEventListener('click', () => {
     const filter = card.dataset.filter;
     activeFilter = filter;
