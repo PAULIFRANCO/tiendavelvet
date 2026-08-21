@@ -71,6 +71,17 @@ async function discountStock(items) {
 }
 
 export default async function handler(req, res) {
+  if (req.method === 'GET') {
+    // Diagnóstico temporal: permite comparar a simple vista, sin exponerlo
+    // completo, qué secreto tiene cargado Vercel ahora mismo contra el que
+    // muestra Mercado Pago. Se saca una vez resuelto el problema de firma.
+    const secret = process.env.MP_WEBHOOK_SECRET || '';
+    const preview = secret.length > 12
+      ? `${secret.slice(0, 6)}...${secret.slice(-6)}`
+      : '(vacío o muy corto)';
+    return res.status(200).json({ secretLength: secret.length, secretPreview: preview });
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).end();
   }
