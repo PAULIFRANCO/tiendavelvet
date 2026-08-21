@@ -9,6 +9,24 @@ let cart = loadCart();
 let activeFilter = 'all';
 let PRODUCTS = [];
 
+async function loadCategories() {
+  const supabase = await getSupabase();
+  const { data, error } = await supabase.from('categories').select('*').order('sort_order');
+  if (error) {
+    console.error('Error al cargar categorías:', error);
+    return;
+  }
+  const catGrid = document.getElementById('catGrid');
+  catGrid.innerHTML = data.map((c, i) => `
+    <a href="#productos" class="cat-card ${i === 0 ? 'cat-card--big' : ''}" data-filter="${c.slug}">
+      <div class="cat-card__img ${c.image_url ? '' : `cat-img-${(i % 5) + 1}`}"
+        ${c.image_url ? `style="background-image:url('${c.image_url}');background-size:cover;background-position:center;"` : ''}></div>
+      <div class="cat-card__label"><h3>${c.name}</h3><span>Ver más →</span></div>
+    </a>
+  `).join('');
+}
+loadCategories();
+
 async function loadProducts() {
   const supabase = await getSupabase();
   const { data, error } = await supabase.from('products').select('*').order('id');
@@ -84,16 +102,23 @@ document.getElementById('filters').addEventListener('click', e => {
   renderProducts();
 });
 
-// Category cards and nav dropdown links trigger a filter + scroll (handled by anchor + this listener)
-document.querySelectorAll('.cat-card, .nav__dropdown a[data-filter]').forEach(card => {
-  card.addEventListener('click', () => {
-    const filter = card.dataset.filter;
-    activeFilter = filter;
-    document.querySelectorAll('.filter-btn').forEach(b => {
-      b.classList.toggle('active', b.dataset.filter === filter);
-    });
-    renderProducts();
+// Category cards (creadas dinámicamente) y links del desplegable del nav
+// disparan un filtro + scroll (el scroll lo hace el propio href="#productos").
+function applyCategoryFilter(filter) {
+  activeFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.filter === filter);
   });
+  renderProducts();
+}
+
+document.getElementById('catGrid').addEventListener('click', e => {
+  const card = e.target.closest('.cat-card');
+  if (card) applyCategoryFilter(card.dataset.filter);
+});
+
+document.querySelectorAll('.nav__dropdown a[data-filter]').forEach(link => {
+  link.addEventListener('click', () => applyCategoryFilter(link.dataset.filter));
 });
 
 // ==================== FAVORITES ====================
