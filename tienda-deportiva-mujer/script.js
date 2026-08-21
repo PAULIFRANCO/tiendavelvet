@@ -249,15 +249,37 @@ document.getElementById('cartClose').addEventListener('click', closeCart);
 cartOverlay.addEventListener('click', closeCart);
 
 const checkoutBtn = document.getElementById('checkoutBtn');
+const checkoutOverlay = document.getElementById('checkoutOverlay');
+const checkoutModal = document.getElementById('checkoutModal');
+const checkoutForm = document.getElementById('checkoutForm');
+const checkoutSubmitBtn = document.getElementById('checkoutSubmitBtn');
 
-checkoutBtn.addEventListener('click', async () => {
+function openCheckout() {
+  closeCart();
+  checkoutOverlay.classList.add('active');
+  checkoutModal.classList.add('active');
+}
+function closeCheckout() {
+  checkoutOverlay.classList.remove('active');
+  checkoutModal.classList.remove('active');
+}
+
+checkoutBtn.addEventListener('click', () => {
   if (cart.length === 0) {
     showToast('Tu carrito está vacío');
     return;
   }
+  openCheckout();
+});
 
-  checkoutBtn.disabled = true;
-  checkoutBtn.textContent = 'Procesando...';
+document.getElementById('checkoutModalClose').addEventListener('click', closeCheckout);
+checkoutOverlay.addEventListener('click', closeCheckout);
+
+checkoutForm.addEventListener('submit', async e => {
+  e.preventDefault();
+
+  checkoutSubmitBtn.disabled = true;
+  checkoutSubmitBtn.textContent = 'Procesando...';
 
   try {
     const res = await fetch('/api/create-preference', {
@@ -265,17 +287,31 @@ checkoutBtn.addEventListener('click', async () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         items: cart.map(item => ({ id: item.id, qty: item.qty })),
+        payerEmail: document.getElementById('shipEmail').value.trim(),
+        shipping: {
+          fullName: document.getElementById('shipFullName').value.trim(),
+          phone: document.getElementById('shipPhone').value.trim(),
+          address: document.getElementById('shipAddress').value.trim(),
+          city: document.getElementById('shipCity').value.trim(),
+          province: document.getElementById('shipProvince').value.trim(),
+          zip: document.getElementById('shipZip').value.trim(),
+        },
       }),
     });
 
-    if (!res.ok) throw new Error('create-preference failed');
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || 'create-preference failed');
+    }
 
     const data = await res.json();
     window.location.href = data.init_point;
   } catch (err) {
-    showToast('Hubo un problema al iniciar el pago. Intentá de nuevo.');
-    checkoutBtn.disabled = false;
-    checkoutBtn.textContent = 'Finalizar compra';
+    showToast(err.message === 'create-preference failed' || !err.message
+      ? 'Hubo un problema al iniciar el pago. Intentá de nuevo.'
+      : err.message);
+    checkoutSubmitBtn.disabled = false;
+    checkoutSubmitBtn.textContent = 'Continuar al pago';
   }
 });
 

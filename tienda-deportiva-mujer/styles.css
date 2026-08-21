@@ -666,6 +666,68 @@ h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: 0.5px; line-h
 .cart-panel__footer { padding: 22px 24px; border-top: 1px solid var(--gray-light); }
 .cart-total { display: flex; justify-content: space-between; margin-bottom: 16px; font-size: 1.05rem; }
 
+/* ==================== CHECKOUT MODAL ==================== */
+.checkout-overlay {
+  position: fixed; inset: 0;
+  background: rgba(20,18,26,0.55);
+  z-index: 2998;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.checkout-overlay.active { opacity: 1; pointer-events: all; }
+
+.checkout-modal {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -48%);
+  width: 100%; max-width: 440px;
+  max-height: 88vh;
+  background: var(--white);
+  border-radius: 4px;
+  z-index: 2999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.checkout-modal.active {
+  opacity: 1;
+  pointer-events: all;
+  transform: translate(-50%, -50%);
+}
+.checkout-modal__head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 22px 24px;
+  border-bottom: 1px solid var(--gray-light);
+}
+.checkout-modal__head h3 { font-family: var(--font-body); font-weight: 600; font-size: 1rem; }
+.checkout-modal__head button { font-size: 1.1rem; color: var(--gray); }
+
+.checkout-form { padding: 22px 24px; overflow-y: auto; }
+.checkout-form label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--black);
+  margin-bottom: 14px;
+}
+.checkout-form input {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 11px 13px;
+  border: 1px solid var(--gray-light);
+  border-radius: 2px;
+  font-size: 0.92rem;
+  outline: none;
+}
+.checkout-form input:focus { border-color: var(--black); }
+.checkout-form__row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.checkout-form .btn { margin-top: 6px; }
+
 /* ==================== TOAST ==================== */
 .toast {
   position: fixed;

@@ -260,6 +260,48 @@
   </div>
 </aside>
 
+<!-- ===== CHECKOUT: DATOS DE ENVÍO ===== -->
+<div class="checkout-overlay" id="checkoutOverlay"></div>
+<div class="checkout-modal" id="checkoutModal">
+  <div class="checkout-modal__head">
+    <h3>Datos de envío</h3>
+    <button id="checkoutModalClose">✕</button>
+  </div>
+  <form id="checkoutForm" class="checkout-form">
+    <label>
+      Nombre y apellido
+      <input type="text" id="shipFullName" required>
+    </label>
+    <label>
+      Email
+      <input type="email" id="shipEmail" required>
+    </label>
+    <label>
+      Teléfono
+      <input type="tel" id="shipPhone" required>
+    </label>
+    <label>
+      Dirección (calle y número)
+      <input type="text" id="shipAddress" required>
+    </label>
+    <div class="checkout-form__row">
+      <label>
+        Ciudad
+        <input type="text" id="shipCity" required>
+      </label>
+      <label>
+        Provincia
+        <input type="text" id="shipProvince" required>
+      </label>
+    </div>
+    <label>
+      Código postal
+      <input type="text" id="shipZip" required>
+    </label>
+    <button type="submit" class="btn btn--primary btn--full" id="checkoutSubmitBtn">Continuar al pago</button>
+  </form>
+</div>
+
 <!-- ===== TOAST ===== -->
 <div class="toast" id="toast"></div>
 
