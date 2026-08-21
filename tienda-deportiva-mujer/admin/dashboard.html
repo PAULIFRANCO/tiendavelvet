@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Admin — VELVET</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <header class="admin-header">
+    <a href="/index.html" class="logo">velvet<span>.</span></a>
+    <span class="admin-title">Panel de administración</span>
+    <button class="btn btn--outline" id="logoutBtn">Cerrar sesión</button>
+  </header>
+
+  <div class="admin-tabs">
+    <button class="admin-tab active" data-tab="orders">Pedidos</button>
+    <button class="admin-tab" data-tab="products">Stock y fotos</button>
+  </div>
+
+  <main class="admin-main">
+    <section id="tab-orders" class="admin-panel active">
+      <div class="admin-panel__head">
+        <h2>Pedidos</h2>
+        <button class="btn btn--outline" id="refreshOrders">Actualizar</button>
+      </div>
+      <div class="table-wrap">
+        <table class="admin-table" id="ordersTable">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Productos</th>
+              <th>Total</th>
+              <th>Estado</th>
+              <th>Email</th>
+            </tr>
+          </thead>
+          <tbody id="ordersBody">
+            <tr><td colspan="5" class="admin-empty">Cargando pedidos...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="tab-products" class="admin-panel">
+      <div class="admin-panel__head">
+        <h2>Stock y fotos</h2>
+        <button class="btn btn--outline" id="refreshProducts">Actualizar</button>
+      </div>
+      <div class="table-wrap">
+        <table class="admin-table" id="productsTable">
+          <thead>
+            <tr>
+              <th>Foto</th>
+              <th>Producto</th>
+              <th>Categoría</th>
+              <th>Precio</th>
+              <th>Stock</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="productsBody">
+            <tr><td colspan="6" class="admin-empty">Cargando productos...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script type="module" src="admin.js"></script>
+</body>
+</html>
