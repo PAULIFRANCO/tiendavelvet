@@ -77,14 +77,18 @@ export default async function handler(req, res) {
 
   const dataId = req.query?.['data.id'] || req.body?.data?.id;
 
+  if (!dataId) {
+    // Mercado Pago también manda avisos de otros tipos (ej. topic=merchant_order)
+    // que no traen data.id — no son pagos, los ignoramos sin tratarlos como error.
+    return res.status(200).end();
+  }
+
   if (!isValidSignature(req, dataId)) {
     console.warn('Webhook rechazado: firma inválida');
     return res.status(401).end();
   }
 
   try {
-    if (!dataId) return res.status(200).end();
-
     const payment = await paymentClient.get({ id: dataId });
     const orderId = payment.external_reference;
 
