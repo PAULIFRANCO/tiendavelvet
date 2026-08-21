@@ -18,6 +18,7 @@
   <div class="admin-tabs">
     <button class="admin-tab active" data-tab="orders">Pedidos</button>
     <button class="admin-tab" data-tab="products">Stock y fotos</button>
+    <button class="admin-tab" data-tab="categories">Categorías</button>
   </div>
 
   <main class="admin-main">
@@ -63,6 +64,27 @@
           </thead>
           <tbody id="productsBody">
             <tr><td colspan="6" class="admin-empty">Cargando productos...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="tab-categories" class="admin-panel">
+      <div class="admin-panel__head">
+        <h2>Categorías</h2>
+        <button class="btn btn--outline" id="refreshCategories">Actualizar</button>
+      </div>
+      <div class="table-wrap">
+        <table class="admin-table" id="categoriesTable">
+          <thead>
+            <tr>
+              <th>Foto</th>
+              <th>Categoría</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="categoriesBody">
+            <tr><td colspan="3" class="admin-empty">Cargando categorías...</td></tr>
           </tbody>
         </table>
       </div>

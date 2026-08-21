@@ -69,9 +69,11 @@ async function initDashboard() {
 
   loadOrders(supabase);
   loadProducts(supabase);
+  loadCategories(supabase);
 
   document.getElementById('refreshOrders').addEventListener('click', () => loadOrders(supabase));
   document.getElementById('refreshProducts').addEventListener('click', () => loadProducts(supabase));
+  document.getElementById('refreshCategories').addEventListener('click', () => loadCategories(supabase));
 }
 
 async function loadOrders(supabase) {
@@ -196,6 +198,73 @@ async function loadProducts(supabase) {
 
       showToast('Foto actualizada');
       loadProducts(supabase);
+    });
+  });
+}
+
+async function loadCategories(supabase) {
+  const tbody = document.getElementById('categoriesBody');
+  tbody.innerHTML = '<tr><td colspan="3" class="admin-empty">Cargando categorías...</td></tr>';
+
+  const { data, error } = await supabase.from('categories').select('*').order('sort_order');
+
+  if (error) {
+    tbody.innerHTML = '<tr><td colspan="3" class="admin-empty">No se pudieron cargar las categorías.</td></tr>';
+    console.error(error);
+    return;
+  }
+
+  tbody.innerHTML = data.map(c => `
+    <tr data-slug="${c.slug}">
+      <td>
+        ${c.image_url
+          ? `<img class="prod-thumb" src="${c.image_url}" alt="${c.name}">`
+          : `<div class="prod-thumb prod-thumb--fallback"></div>`}
+      </td>
+      <td>${c.name}</td>
+      <td>
+        <label class="file-label">
+          Subir foto
+          <input type="file" accept="image/*" data-cat-upload="${c.slug}">
+        </label>
+      </td>
+    </tr>
+  `).join('');
+
+  tbody.querySelectorAll('[data-cat-upload]').forEach(input => {
+    input.addEventListener('change', async () => {
+      const file = input.files[0];
+      if (!file) return;
+      const slug = input.dataset.catUpload;
+      showToast('Subiendo foto...');
+
+      const ext = file.name.split('.').pop();
+      const path = `category-${slug}-${Date.now()}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('product-images')
+        .upload(path, file, { upsert: true });
+
+      if (uploadError) {
+        showToast('No se pudo subir la foto');
+        console.error(uploadError);
+        return;
+      }
+
+      const { data: publicData } = supabase.storage.from('product-images').getPublicUrl(path);
+      const { error: updateError } = await supabase
+        .from('categories')
+        .update({ image_url: publicData.publicUrl })
+        .eq('slug', slug);
+
+      if (updateError) {
+        showToast('Foto subida pero no se pudo guardar');
+        console.error(updateError);
+        return;
+      }
+
+      showToast('Foto actualizada');
+      loadCategories(supabase);
     });
   });
 }
