@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import { paymentClient } from '../lib/mercadopago.js';
 import { supabase } from '../lib/supabase.js';
+import { sendEmail, orderApprovedEmail } from '../lib/email.js';
 
 // Verifica la firma HMAC que envía Mercado Pago según su documentación oficial,
 // para asegurarnos de que la notificación viene realmente de MP y no de un tercero
@@ -38,6 +39,23 @@ function isValidSignature(req, dataId) {
   }
 }
 
+// Descuenta stock por cada producto del pedido. Se llama solo una vez,
+// cuando el pedido pasa a "approved" por primera vez (ver más abajo).
+async function discountStock(items) {
+  for (const item of items) {
+    const productId = Number(item.id);
+    const { data: product, error } = await supabase
+      .from('products')
+      .select('stock')
+      .eq('id', productId)
+      .single();
+    if (error || !product) continue;
+
+    const newStock = Math.max(0, product.stock - item.quantity);
+    await supabase.from('products').update({ stock: newStock }).eq('id', productId);
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).end();
@@ -57,6 +75,12 @@ export default async function handler(req, res) {
     const orderId = payment.external_reference;
 
     if (orderId) {
+      const { data: existingOrder } = await supabase
+        .from('orders')
+        .select('status, items, total, payer_email')
+        .eq('id', orderId)
+        .single();
+
       await supabase
         .from('orders')
         .update({
@@ -64,6 +88,19 @@ export default async function handler(req, res) {
           mp_payment_id: String(payment.id),
         })
         .eq('id', orderId);
+
+      const wasAlreadyApproved = existingOrder?.status === 'approved';
+      if (payment.status === 'approved' && !wasAlreadyApproved && existingOrder?.items) {
+        await discountStock(existingOrder.items);
+
+        if (existingOrder.payer_email) {
+          await sendEmail({
+            to: existingOrder.payer_email,
+            subject: '¡Tu pago fue aprobado! — VELVET',
+            html: orderApprovedEmail(existingOrder),
+          });
+        }
+      }
     }
 
     return res.status(200).end();

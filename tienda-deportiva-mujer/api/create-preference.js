@@ -1,9 +1,9 @@
 import crypto from 'node:crypto';
-import { PRODUCTS } from '../data/products.js';
 import { preferenceClient } from '../lib/mercadopago.js';
 import { supabase } from '../lib/supabase.js';
 
 const MAX_QTY_PER_ITEM = 20;
+const REQUIRED_SHIPPING_FIELDS = ['fullName', 'phone', 'address', 'city', 'province', 'zip'];
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -12,23 +12,46 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { items, payerEmail } = req.body ?? {};
+    const { items, payerEmail, shipping } = req.body ?? {};
 
     if (!Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ error: 'El carrito está vacío' });
     }
 
-    // Precio SIEMPRE calculado server-side desde el catálogo propio.
+    if (typeof payerEmail !== 'string' || !payerEmail.includes('@')) {
+      return res.status(400).json({ error: 'Falta un email válido' });
+    }
+
+    if (!shipping || typeof shipping !== 'object') {
+      return res.status(400).json({ error: 'Faltan los datos de envío' });
+    }
+    for (const field of REQUIRED_SHIPPING_FIELDS) {
+      if (typeof shipping[field] !== 'string' || !shipping[field].trim()) {
+        return res.status(400).json({ error: 'Faltan completar datos de envío' });
+      }
+    }
+
+    const ids = items.map(i => Number(i?.id)).filter(Number.isFinite);
+    const { data: products, error: productsError } = await supabase
+      .from('products')
+      .select('id, name, price, stock')
+      .in('id', ids);
+    if (productsError) throw productsError;
+
+    // Precio y stock SIEMPRE verificados server-side contra la base de datos.
     // Nunca se confía en un precio que venga del cliente.
     const orderItems = [];
     let total = 0;
 
     for (const rawItem of items) {
-      const product = PRODUCTS.find(p => p.id === Number(rawItem?.id));
+      const product = products.find(p => p.id === Number(rawItem?.id));
       const qty = Number(rawItem?.qty);
 
       if (!product || !Number.isInteger(qty) || qty <= 0 || qty > MAX_QTY_PER_ITEM) {
         return res.status(400).json({ error: 'Carrito inválido' });
+      }
+      if (qty > product.stock) {
+        return res.status(409).json({ error: `Sin stock suficiente de "${product.name}"` });
       }
 
       orderItems.push({
@@ -45,21 +68,38 @@ export default async function handler(req, res) {
     if (!siteUrl) throw new Error('Falta la variable de entorno SITE_URL');
 
     const orderId = crypto.randomUUID();
+    const cleanShipping = {
+      fullName: shipping.fullName.trim(),
+      phone: shipping.phone.trim(),
+      address: shipping.address.trim(),
+      city: shipping.city.trim(),
+      province: shipping.province.trim(),
+      zip: shipping.zip.trim(),
+    };
 
     const { error: dbError } = await supabase.from('orders').insert({
       id: orderId,
       items: orderItems,
       total,
       status: 'pending',
-      payer_email: typeof payerEmail === 'string' ? payerEmail : null,
+      fulfillment_status: 'no_preparado',
+      payer_email: payerEmail,
+      shipping: cleanShipping,
     });
     if (dbError) throw dbError;
+
+    const [firstName, ...rest] = cleanShipping.fullName.split(' ');
 
     const preference = await preferenceClient.create({
       body: {
         items: orderItems,
         external_reference: orderId,
-        payer: typeof payerEmail === 'string' ? { email: payerEmail } : undefined,
+        payer: {
+          email: payerEmail,
+          name: firstName,
+          surname: rest.join(' ') || firstName,
+          phone: { number: cleanShipping.phone },
+        },
         back_urls: {
           success: `${siteUrl}/success.html`,
           failure: `${siteUrl}/failure.html`,
