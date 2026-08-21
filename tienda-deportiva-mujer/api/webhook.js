@@ -32,9 +32,23 @@ function isValidSignature(req, dataId) {
     const expectedBuffer = Buffer.from(expected, 'hex');
     const receivedBuffer = Buffer.from(v1, 'hex');
 
-    if (expectedBuffer.length !== receivedBuffer.length) return false;
-    return crypto.timingSafeEqual(expectedBuffer, receivedBuffer);
-  } catch {
+    const matches =
+      expectedBuffer.length === receivedBuffer.length &&
+      crypto.timingSafeEqual(expectedBuffer, receivedBuffer);
+
+    if (!matches) {
+      // Log temporal para diagnosticar el mismatch de firma. No expone el secreto.
+      console.warn('DEBUG firma inválida:', {
+        manifest,
+        expected,
+        received: v1,
+        secretLength: process.env.MP_WEBHOOK_SECRET.length,
+      });
+    }
+
+    return matches;
+  } catch (err) {
+    console.warn('DEBUG excepción validando firma:', err.message);
     return false;
   }
 }
