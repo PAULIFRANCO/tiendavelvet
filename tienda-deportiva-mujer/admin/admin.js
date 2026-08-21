@@ -2,6 +2,13 @@ import { getSupabase } from '../data/supabase-client.js';
 
 const fmt = n => '$' + Number(n).toLocaleString('es-AR');
 
+// Los datos de envío los escribe cualquier visitante en el checkout público.
+// Antes de mostrarlos acá con innerHTML, hay que neutralizar HTML/scripts
+// para que una clienta no pueda ejecutar código en el navegador de la admin.
+const escapeHtml = str => String(str ?? '').replace(/[&<>"']/g, ch => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+}[ch]));
+
 const STATUS_LABELS = {
   approved: 'Aprobado',
   pending: 'Pendiente',
@@ -105,14 +112,14 @@ async function loadOrders(supabase) {
 
   tbody.innerHTML = data.map(order => {
     const date = new Date(order.created_at).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' });
-    const items = (order.items || []).map(i => `${i.quantity}x ${i.title}`).join(', ');
+    const items = (order.items || []).map(i => `${escapeHtml(i.quantity)}x ${escapeHtml(i.title)}`).join(', ');
     const statusLabel = STATUS_LABELS[order.status] || order.status;
     const s = order.shipping;
     const customer = s
-      ? `${s.fullName}<br><span style="color:var(--gray);font-size:0.78rem;">${order.payer_email || ''}${s.phone ? ' · ' + s.phone : ''}</span>`
-      : (order.payer_email || '—');
+      ? `${escapeHtml(s.fullName)}<br><span style="color:var(--gray);font-size:0.78rem;">${escapeHtml(order.payer_email || '')}${s.phone ? ' · ' + escapeHtml(s.phone) : ''}</span>`
+      : escapeHtml(order.payer_email || '—');
     const address = s
-      ? `${s.address}<br><span style="color:var(--gray);font-size:0.78rem;">${s.city}, ${s.province} (${s.zip})</span>`
+      ? `${escapeHtml(s.address)}<br><span style="color:var(--gray);font-size:0.78rem;">${escapeHtml(s.city)}, ${escapeHtml(s.province)} (${escapeHtml(s.zip)})</span>`
       : '—';
     const fulfillment = order.fulfillment_status || 'no_preparado';
 
@@ -178,11 +185,11 @@ async function loadProducts(supabase) {
     <tr data-id="${p.id}">
       <td>
         ${p.image_url
-          ? `<img class="prod-thumb" src="${p.image_url}" alt="${p.name}">`
+          ? `<img class="prod-thumb" src="${p.image_url}" alt="${escapeHtml(p.name)}">`
           : `<div class="prod-thumb prod-thumb--fallback" style="background:${p.color || '#e6e2db'}"></div>`}
       </td>
-      <td>${p.name}</td>
-      <td>${p.cat}</td>
+      <td>${escapeHtml(p.name)}</td>
+      <td>${escapeHtml(p.cat)}</td>
       <td><input type="text" inputmode="numeric" pattern="[0-9]*" class="stock-input" data-price="${p.id}" value="${p.price}"></td>
       <td><input type="text" inputmode="numeric" pattern="[0-9]*" class="stock-input" data-stock="${p.id}" value="${p.stock}"></td>
       <td>
@@ -268,10 +275,10 @@ async function loadCategories(supabase) {
     <tr data-slug="${c.slug}">
       <td>
         ${c.image_url
-          ? `<img class="prod-thumb" src="${c.image_url}" alt="${c.name}">`
+          ? `<img class="prod-thumb" src="${c.image_url}" alt="${escapeHtml(c.name)}">`
           : `<div class="prod-thumb prod-thumb--fallback"></div>`}
       </td>
-      <td>${c.name}</td>
+      <td>${escapeHtml(c.name)}</td>
       <td>
         <label class="file-label">
           Subir foto
