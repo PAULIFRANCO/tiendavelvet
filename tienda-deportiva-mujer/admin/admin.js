@@ -131,7 +131,7 @@ async function loadProducts(supabase) {
       </td>
       <td>${p.name}</td>
       <td>${p.cat}</td>
-      <td>${fmt(p.price)}</td>
+      <td><input type="number" min="0" step="1" class="stock-input" data-price="${p.id}" value="${p.price}"></td>
       <td><input type="number" min="0" class="stock-input" data-stock="${p.id}" value="${p.stock}"></td>
       <td>
         <label class="file-label">
@@ -149,6 +149,16 @@ async function loadProducts(supabase) {
       input.value = newStock;
       const { error } = await supabase.from('products').update({ stock: newStock }).eq('id', id);
       showToast(error ? 'No se pudo actualizar el stock' : 'Stock actualizado');
+    });
+  });
+
+  tbody.querySelectorAll('[data-price]').forEach(input => {
+    input.addEventListener('change', async () => {
+      const id = Number(input.dataset.price);
+      const newPrice = Math.max(0, Number(input.value) || 0);
+      input.value = newPrice;
+      const { error } = await supabase.from('products').update({ price: newPrice }).eq('id', id);
+      showToast(error ? 'No se pudo actualizar el precio' : 'Precio actualizado');
     });
   });
 
