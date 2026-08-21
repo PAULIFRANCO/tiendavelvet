@@ -133,8 +133,8 @@ async function loadProducts(supabase) {
       </td>
       <td>${p.name}</td>
       <td>${p.cat}</td>
-      <td><input type="number" min="0" step="1" class="stock-input" data-price="${p.id}" value="${p.price}"></td>
-      <td><input type="number" min="0" class="stock-input" data-stock="${p.id}" value="${p.stock}"></td>
+      <td><input type="text" inputmode="numeric" pattern="[0-9]*" class="stock-input" data-price="${p.id}" value="${p.price}"></td>
+      <td><input type="text" inputmode="numeric" pattern="[0-9]*" class="stock-input" data-stock="${p.id}" value="${p.stock}"></td>
       <td>
         <label class="file-label">
           Subir foto
