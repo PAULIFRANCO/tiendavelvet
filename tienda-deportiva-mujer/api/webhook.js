@@ -32,23 +32,11 @@ function isValidSignature(req, dataId) {
     const expectedBuffer = Buffer.from(expected, 'hex');
     const receivedBuffer = Buffer.from(v1, 'hex');
 
-    const matches =
+    return (
       expectedBuffer.length === receivedBuffer.length &&
-      crypto.timingSafeEqual(expectedBuffer, receivedBuffer);
-
-    if (!matches) {
-      // Log temporal para diagnosticar el mismatch de firma. No expone el secreto.
-      console.warn('DEBUG firma inválida:', {
-        manifest,
-        expected,
-        received: v1,
-        secretLength: process.env.MP_WEBHOOK_SECRET.length,
-      });
-    }
-
-    return matches;
-  } catch (err) {
-    console.warn('DEBUG excepción validando firma:', err.message);
+      crypto.timingSafeEqual(expectedBuffer, receivedBuffer)
+    );
+  } catch {
     return false;
   }
 }
@@ -69,17 +57,6 @@ async function discountStock(items) {
 }
 
 export default async function handler(req, res) {
-  if (req.method === 'GET') {
-    // Diagnóstico temporal: permite comparar a simple vista, sin exponerlo
-    // completo, qué secreto tiene cargado Vercel ahora mismo contra el que
-    // muestra Mercado Pago. Se saca una vez resuelto el problema de firma.
-    const secret = process.env.MP_WEBHOOK_SECRET || '';
-    const preview = secret.length > 12
-      ? `${secret.slice(0, 6)}...${secret.slice(-6)}`
-      : '(vacío o muy corto)';
-    return res.status(200).json({ secretLength: secret.length, secretPreview: preview });
-  }
-
   if (req.method !== 'POST') {
     return res.status(405).end();
   }
@@ -92,18 +69,11 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  // ⚠️ TEMPORAL — VOLVER A ACTIVAR AL PASAR A PRODUCCIÓN ⚠️
-  // En modo prueba, Mercado Pago exige alternar entre la cuenta real y la
-  // cuenta vendedora de prueba para ver la clave de firma correcta, lo que
-  // generó desfasajes difíciles de sincronizar. Por eso, mientras tanto, NO
-  // bloqueamos si la firma no coincide (solo lo registramos). Esto es seguro
-  // porque más abajo siempre volvemos a consultar el pago directo a la API de
-  // Mercado Pago con nuestro propio Access Token — nunca se confía en lo que
-  // dice el cuerpo de la notificación. Descomentar el "return 401" de abajo
-  // al pasar a producción, donde ya no existe este problema de cuentas separadas.
+  // Verificación de firma reactivada: ya en producción no existe el lío de
+  // cuenta real / cuenta de prueba que teníamos en modo test.
   if (!isValidSignature(req, dataId)) {
-    console.warn('Firma inválida (no bloqueante en modo prueba — ver nota arriba)');
-    // return res.status(401).end();
+    console.warn('Webhook rechazado: firma inválida');
+    return res.status(401).end();
   }
 
   try {
