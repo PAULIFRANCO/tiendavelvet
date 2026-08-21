@@ -117,7 +117,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: 0.5px; line-h
 }
 .logo span { color: var(--accent); }
 
-.nav { display: flex; gap: 36px; }
+.nav { display: flex; align-items: center; gap: 36px; }
 .nav__link {
   font-size: 0.85rem;
   font-weight: 600;

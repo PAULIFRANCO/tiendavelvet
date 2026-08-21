@@ -24,6 +24,9 @@ async function loadCategories() {
       <div class="cat-card__label"><h3>${c.name}</h3><span>Ver más →</span></div>
     </a>
   `).join('');
+
+  const navDropdown = document.getElementById('navDropdown');
+  navDropdown.innerHTML = data.map(c => `<a href="#productos" data-filter="${c.slug}">${c.name}</a>`).join('');
 }
 loadCategories();
 
@@ -117,8 +120,9 @@ document.getElementById('catGrid').addEventListener('click', e => {
   if (card) applyCategoryFilter(card.dataset.filter);
 });
 
-document.querySelectorAll('.nav__dropdown a[data-filter]').forEach(link => {
-  link.addEventListener('click', () => applyCategoryFilter(link.dataset.filter));
+document.getElementById('navDropdown').addEventListener('click', e => {
+  const link = e.target.closest('a[data-filter]');
+  if (link) applyCategoryFilter(link.dataset.filter);
 });
 
 // ==================== FAVORITES ====================
