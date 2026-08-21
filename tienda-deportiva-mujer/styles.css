@@ -474,6 +474,9 @@ h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: 0.5px; line-h
   transition: all 0.25s ease;
 }
 .add-btn:hover { background: var(--accent-dark); }
+.add-btn[disabled] { background: var(--gray-light); color: var(--gray); cursor: not-allowed; }
+.add-btn[disabled]:hover { background: var(--gray-light); }
+.product-badge--out { background: var(--gray); }
 
 /* ==================== BENEFITS ==================== */
 .benefits { padding: 80px 0; background: var(--white); }

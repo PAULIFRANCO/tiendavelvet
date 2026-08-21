@@ -1,5 +1,5 @@
 // ==================== DATA ====================
-import { PRODUCTS } from './data/products.js';
+import { getSupabase } from './data/supabase-client.js';
 
 const fmt = n => '$' + n.toLocaleString('es-AR');
 const CART_KEY = 'velvet_cart';
@@ -7,6 +7,28 @@ const CART_KEY = 'velvet_cart';
 // ==================== STATE ====================
 let cart = loadCart();
 let activeFilter = 'all';
+let PRODUCTS = [];
+
+async function loadProducts() {
+  const supabase = await getSupabase();
+  const { data, error } = await supabase.from('products').select('*').order('id');
+  if (error) {
+    console.error('Error al cargar productos:', error);
+    return;
+  }
+  PRODUCTS = data.map(p => ({
+    id: p.id,
+    name: p.name,
+    cat: p.cat,
+    price: p.price,
+    oldPrice: p.old_price,
+    badge: p.badge,
+    color: p.color,
+    image: p.image_url,
+    stock: p.stock,
+  }));
+  renderProducts();
+}
 
 function loadCart() {
   try {
@@ -26,25 +48,31 @@ const productGrid = document.getElementById('productGrid');
 
 function renderProducts() {
   const list = activeFilter === 'all' ? PRODUCTS : PRODUCTS.filter(p => p.cat === activeFilter);
-  productGrid.innerHTML = list.map(p => `
+  productGrid.innerHTML = list.map(p => {
+    const outOfStock = p.stock <= 0;
+    return `
     <div class="product-card" data-id="${p.id}">
       <div class="product-card__img">
-        ${p.badge ? `<span class="product-badge">${p.badge}</span>` : ''}
+        ${p.badge && !outOfStock ? `<span class="product-badge">${p.badge}</span>` : ''}
+        ${outOfStock ? `<span class="product-badge product-badge--out">SIN STOCK</span>` : ''}
         <button class="product-fav" data-fav="${p.id}" aria-label="Favorito">♡</button>
-        <div class="img-fallback" style="background:${p.color}"></div>
+        ${p.image
+          ? `<img src="${p.image}" alt="${p.name}" loading="lazy">`
+          : `<div class="img-fallback" style="background:${p.color}"></div>`}
       </div>
       <div class="product-card__body">
         <span class="product-cat">${p.cat}</span>
         <h3>${p.name}</h3>
         <div class="product-price-row">
           <span class="product-price">${p.oldPrice ? `<small>${fmt(p.oldPrice)}</small>` : ''}${fmt(p.price)}</span>
-          <button class="add-btn" data-add="${p.id}" aria-label="Agregar al carrito">+</button>
+          <button class="add-btn" data-add="${p.id}" aria-label="Agregar al carrito" ${outOfStock ? 'disabled' : ''}>+</button>
         </div>
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 }
-renderProducts();
+loadProducts();
 
 // ==================== FILTERS ====================
 document.getElementById('filters').addEventListener('click', e => {
@@ -92,7 +120,16 @@ const cartTotalEl = document.getElementById('cartTotal');
 
 function addToCart(id) {
   const product = PRODUCTS.find(p => p.id === id);
+  if (!product || product.stock <= 0) {
+    showToast('Producto sin stock');
+    return;
+  }
   const existing = cart.find(i => i.id === id);
+  const qtyInCart = existing ? existing.qty : 0;
+  if (qtyInCart + 1 > product.stock) {
+    showToast('No hay más stock disponible');
+    return;
+  }
   if (existing) {
     existing.qty++;
   } else {
@@ -132,7 +169,7 @@ function renderCart() {
 
   cartItemsEl.innerHTML = cart.map(item => `
     <div class="cart-item" data-id="${item.id}">
-      <div class="cart-item__img" style="background:${item.color}"></div>
+      <div class="cart-item__img" style="${item.image ? `background-image:url('${item.image}');background-size:cover;background-position:center;` : `background:${item.color}`}"></div>
       <div class="cart-item__info">
         <h4>${item.name}</h4>
         <span>${item.cat}</span>
