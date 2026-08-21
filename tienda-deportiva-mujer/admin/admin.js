@@ -10,6 +10,13 @@ const STATUS_LABELS = {
   in_process: 'En proceso',
 };
 
+const FULFILLMENT_LABELS = {
+  no_preparado: 'Sin preparar',
+  preparando: 'Preparando',
+  enviado: 'Enviado',
+  entregado: 'Entregado',
+};
+
 const loginForm = document.getElementById('loginForm');
 const ordersTable = document.getElementById('ordersTable');
 
@@ -78,7 +85,7 @@ async function initDashboard() {
 
 async function loadOrders(supabase) {
   const tbody = document.getElementById('ordersBody');
-  tbody.innerHTML = '<tr><td colspan="5" class="admin-empty">Cargando pedidos...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="7" class="admin-empty">Cargando pedidos...</td></tr>';
 
   const { data, error } = await supabase
     .from('orders')
@@ -86,13 +93,13 @@ async function loadOrders(supabase) {
     .order('created_at', { ascending: false });
 
   if (error) {
-    tbody.innerHTML = '<tr><td colspan="5" class="admin-empty">No se pudieron cargar los pedidos.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="admin-empty">No se pudieron cargar los pedidos.</td></tr>';
     console.error(error);
     return;
   }
 
   if (!data.length) {
-    tbody.innerHTML = '<tr><td colspan="5" class="admin-empty">Todavía no hay pedidos.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="admin-empty">Todavía no hay pedidos.</td></tr>';
     return;
   }
 
@@ -100,16 +107,59 @@ async function loadOrders(supabase) {
     const date = new Date(order.created_at).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' });
     const items = (order.items || []).map(i => `${i.quantity}x ${i.title}`).join(', ');
     const statusLabel = STATUS_LABELS[order.status] || order.status;
+    const s = order.shipping;
+    const customer = s
+      ? `${s.fullName}<br><span style="color:var(--gray);font-size:0.78rem;">${order.payer_email || ''}${s.phone ? ' · ' + s.phone : ''}</span>`
+      : (order.payer_email || '—');
+    const address = s
+      ? `${s.address}<br><span style="color:var(--gray);font-size:0.78rem;">${s.city}, ${s.province} (${s.zip})</span>`
+      : '—';
+    const fulfillment = order.fulfillment_status || 'no_preparado';
+
     return `
-      <tr>
+      <tr data-order-id="${order.id}">
         <td>${date}</td>
+        <td>${customer}</td>
+        <td>${address}</td>
         <td>${items}</td>
         <td>${fmt(order.total)}</td>
         <td><span class="status-tag status-${order.status}">${statusLabel}</span></td>
-        <td>${order.payer_email || '—'}</td>
+        <td>
+          <select class="fulfillment-select" data-order-fulfillment="${order.id}">
+            ${Object.entries(FULFILLMENT_LABELS).map(([value, label]) =>
+              `<option value="${value}" ${value === fulfillment ? 'selected' : ''}>${label}</option>`
+            ).join('')}
+          </select>
+        </td>
       </tr>
     `;
   }).join('');
+
+  tbody.querySelectorAll('[data-order-fulfillment]').forEach(select => {
+    select.addEventListener('change', async () => {
+      const orderId = select.dataset.orderFulfillment;
+      const fulfillmentStatus = select.value;
+      select.disabled = true;
+
+      const { data: { session } } = await supabase.auth.getSession();
+      try {
+        const res = await fetch('/api/notify-order', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session?.access_token}`,
+          },
+          body: JSON.stringify({ orderId, fulfillmentStatus }),
+        });
+        if (!res.ok) throw new Error();
+        showToast('Pedido actualizado y clienta notificada por email');
+      } catch {
+        showToast('No se pudo actualizar el pedido');
+      } finally {
+        select.disabled = false;
+      }
+    });
+  });
 }
 
 async function loadProducts(supabase) {
