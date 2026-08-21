@@ -53,20 +53,18 @@ function isValidSignature(req, dataId) {
   }
 }
 
-// Descuenta stock por cada producto del pedido. Se llama solo una vez,
-// cuando el pedido pasa a "approved" por primera vez (ver más abajo).
+// Descuenta stock por cada producto del pedido, usando la función atómica
+// discount_stock (ver SEGURIDAD-SETUP.md) para que dos aprobaciones
+// simultáneas del mismo producto no pisen el stock una a la otra.
+// Se llama solo una vez, cuando el pedido pasa a "approved" por primera vez.
 async function discountStock(items) {
   for (const item of items) {
     const productId = Number(item.id);
-    const { data: product, error } = await supabase
-      .from('products')
-      .select('stock')
-      .eq('id', productId)
-      .single();
-    if (error || !product) continue;
-
-    const newStock = Math.max(0, product.stock - item.quantity);
-    await supabase.from('products').update({ stock: newStock }).eq('id', productId);
+    const { error } = await supabase.rpc('discount_stock', {
+      p_id: productId,
+      p_qty: item.quantity,
+    });
+    if (error) console.error(`Error al descontar stock del producto ${productId}:`, error);
   }
 }
 
@@ -113,31 +111,36 @@ export default async function handler(req, res) {
     const orderId = payment.external_reference;
 
     if (orderId) {
-      const { data: existingOrder } = await supabase
-        .from('orders')
-        .select('status, items, total, payer_email')
-        .eq('id', orderId)
-        .single();
+      if (payment.status === 'approved') {
+        // UPDATE atómico con guarda WHERE status != 'approved': si dos
+        // notificaciones del mismo pago llegan casi al mismo tiempo (reintento
+        // de MP), solo una de ellas "gana" la fila y dispara los efectos
+        // (descuento de stock + email). La otra no encuentra fila para
+        // actualizar y no hace nada más.
+        const { data: order } = await supabase
+          .from('orders')
+          .update({ status: payment.status, mp_payment_id: String(payment.id) })
+          .eq('id', orderId)
+          .neq('status', 'approved')
+          .select('items, total, payer_email')
+          .maybeSingle();
 
-      await supabase
-        .from('orders')
-        .update({
-          status: payment.status,
-          mp_payment_id: String(payment.id),
-        })
-        .eq('id', orderId);
+        if (order?.items) {
+          await discountStock(order.items);
 
-      const wasAlreadyApproved = existingOrder?.status === 'approved';
-      if (payment.status === 'approved' && !wasAlreadyApproved && existingOrder?.items) {
-        await discountStock(existingOrder.items);
-
-        if (existingOrder.payer_email) {
-          await sendEmail({
-            to: existingOrder.payer_email,
-            subject: '¡Tu pago fue aprobado! — VELVET',
-            html: orderApprovedEmail(existingOrder),
-          });
+          if (order.payer_email) {
+            await sendEmail({
+              to: order.payer_email,
+              subject: '¡Tu pago fue aprobado! — VELVET',
+              html: orderApprovedEmail(order),
+            });
+          }
         }
+      } else {
+        await supabase
+          .from('orders')
+          .update({ status: payment.status, mp_payment_id: String(payment.id) })
+          .eq('id', orderId);
       }
     }
 
