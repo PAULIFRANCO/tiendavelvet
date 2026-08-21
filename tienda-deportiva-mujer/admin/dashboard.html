@@ -52,6 +52,15 @@
         <h2>Stock y fotos</h2>
         <button class="btn btn--outline" id="refreshProducts">Actualizar</button>
       </div>
+
+      <form id="newProductForm" class="new-product-form">
+        <input type="text" id="newProductName" placeholder="Nombre del producto" required>
+        <select id="newProductCat" required></select>
+        <input type="text" inputmode="numeric" pattern="[0-9]*" id="newProductPrice" placeholder="Precio" required>
+        <input type="text" inputmode="numeric" pattern="[0-9]*" id="newProductStock" placeholder="Stock" required>
+        <button type="submit" class="btn btn--primary">Agregar producto</button>
+      </form>
+
       <div class="table-wrap">
         <table class="admin-table" id="productsTable">
           <thead>

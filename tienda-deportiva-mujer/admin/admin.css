@@ -157,6 +157,31 @@ table { border-collapse: collapse; width: 100%; }
   font-weight: 700;
 }
 
+/* ==================== NEW PRODUCT FORM ==================== */
+.new-product-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  background: var(--white);
+  padding: 16px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  box-shadow: 0 16px 40px -28px rgba(20,18,26,0.2);
+}
+.new-product-form input,
+.new-product-form select {
+  padding: 10px 12px;
+  border: 1px solid var(--gray-light);
+  border-radius: 2px;
+  font-size: 0.85rem;
+  font-family: inherit;
+}
+.new-product-form input[type="text"]:first-child { flex: 1 1 200px; }
+.new-product-form select { flex: 0 1 160px; }
+.new-product-form input[id*="Price"],
+.new-product-form input[id*="Stock"] { flex: 0 1 110px; }
+
 /* ==================== TABLE ==================== */
 .table-wrap {
   background: var(--white);
