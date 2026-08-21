@@ -27,6 +27,12 @@ async function loadCategories() {
 
   const navDropdown = document.getElementById('navDropdown');
   navDropdown.innerHTML = data.map(c => `<a href="#productos" data-filter="${c.slug}">${c.name}</a>`).join('');
+
+  const filters = document.getElementById('filters');
+  filters.querySelectorAll('.filter-btn:not([data-filter="all"])').forEach(b => b.remove());
+  filters.insertAdjacentHTML('beforeend', data.map(c =>
+    `<button class="filter-btn" data-filter="${c.slug}">${c.name}</button>`
+  ).join(''));
 }
 loadCategories();
 
