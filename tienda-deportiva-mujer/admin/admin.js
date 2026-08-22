@@ -9,6 +9,37 @@ const escapeHtml = str => String(str ?? '').replace(/[&<>"']/g, ch => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
 }[ch]));
 
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result).split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function uploadImageViaApi(supabase, file, path) {
+  const { data: { session } } = await supabase.auth.getSession();
+  const base64 = await fileToBase64(file);
+
+  const res = await fetch('/api/upload-image', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${session?.access_token}`,
+    },
+    body: JSON.stringify({ path, base64, contentType: file.type }),
+  });
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo subir la imagen');
+  }
+
+  const { url } = await res.json();
+  return url;
+}
+
 const STATUS_LABELS = {
   approved: 'Aprobado',
   pending: 'Pendiente',
@@ -304,33 +335,24 @@ async function loadProducts(supabase) {
       const id = Number(input.dataset.upload);
       showToast('Subiendo foto...');
 
-      const ext = file.name.split('.').pop();
-      const path = `product-${id}-${Date.now()}.${ext}`;
+      try {
+        const ext = file.name.split('.').pop();
+        const path = `product-${id}-${Date.now()}.${ext}`;
+        const url = await uploadImageViaApi(supabase, file, path);
 
-      const { error: uploadError } = await supabase.storage
-        .from('product-images')
-        .upload(path, file, { upsert: true });
+        const { error: updateError } = await supabase
+          .from('products')
+          .update({ image_url: url })
+          .eq('id', id);
 
-      if (uploadError) {
+        if (updateError) throw updateError;
+
+        showToast('Foto actualizada');
+        loadProducts(supabase);
+      } catch (err) {
         showToast('No se pudo subir la foto');
-        console.error(uploadError);
-        return;
+        console.error(err);
       }
-
-      const { data: publicData } = supabase.storage.from('product-images').getPublicUrl(path);
-      const { error: updateError } = await supabase
-        .from('products')
-        .update({ image_url: publicData.publicUrl })
-        .eq('id', id);
-
-      if (updateError) {
-        showToast('Foto subida pero no se pudo guardar');
-        console.error(updateError);
-        return;
-      }
-
-      showToast('Foto actualizada');
-      loadProducts(supabase);
     });
   });
 }
@@ -371,33 +393,24 @@ async function loadCategories(supabase) {
       const slug = input.dataset.catUpload;
       showToast('Subiendo foto...');
 
-      const ext = file.name.split('.').pop();
-      const path = `category-${slug}-${Date.now()}.${ext}`;
+      try {
+        const ext = file.name.split('.').pop();
+        const path = `category-${slug}-${Date.now()}.${ext}`;
+        const url = await uploadImageViaApi(supabase, file, path);
 
-      const { error: uploadError } = await supabase.storage
-        .from('product-images')
-        .upload(path, file, { upsert: true });
+        const { error: updateError } = await supabase
+          .from('categories')
+          .update({ image_url: url })
+          .eq('slug', slug);
 
-      if (uploadError) {
+        if (updateError) throw updateError;
+
+        showToast('Foto actualizada');
+        loadCategories(supabase);
+      } catch (err) {
         showToast('No se pudo subir la foto');
-        console.error(uploadError);
-        return;
+        console.error(err);
       }
-
-      const { data: publicData } = supabase.storage.from('product-images').getPublicUrl(path);
-      const { error: updateError } = await supabase
-        .from('categories')
-        .update({ image_url: publicData.publicUrl })
-        .eq('slug', slug);
-
-      if (updateError) {
-        showToast('Foto subida pero no se pudo guardar');
-        console.error(updateError);
-        return;
-      }
-
-      showToast('Foto actualizada');
-      loadCategories(supabase);
     });
   });
 }
