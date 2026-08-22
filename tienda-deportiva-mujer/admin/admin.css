@@ -237,6 +237,11 @@ table { border-collapse: collapse; width: 100%; }
   font-size: 0.88rem;
   text-align: center;
 }
+.name-input {
+  width: 100%;
+  min-width: 160px;
+  text-align: left;
+}
 .stock-input:focus { border-color: var(--black); outline: none; }
 
 .fulfillment-select {

@@ -214,8 +214,9 @@ async function fetchCategories(supabase) {
 
 function fillCategorySelect(select, categories, selectedSlug) {
   select.innerHTML = categories.map(c =>
-    `<option value="${c.slug}" ${c.slug === selectedSlug ? 'selected' : ''}>${escapeHtml(c.name)}</option>`
+    `<option value="${c.slug}">${escapeHtml(c.name)}</option>`
   ).join('');
+  if (selectedSlug) select.value = selectedSlug;
 }
 
 async function loadProducts(supabase) {
