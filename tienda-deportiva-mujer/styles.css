@@ -515,6 +515,15 @@ h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: 0.5px; line-h
   grid-template-columns: repeat(3, 1fr);
   gap: 26px;
 }
+.testi-grid--empty {
+  grid-template-columns: 1fr;
+  padding: 40px 0;
+}
+.testi-empty-msg {
+  text-align: center;
+  color: var(--gray);
+  font-size: 0.95rem;
+}
 .testi-card {
   background: var(--cream);
   border-radius: var(--radius);
