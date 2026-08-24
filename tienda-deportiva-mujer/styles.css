@@ -2,15 +2,15 @@
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
-  --black: #16141c;
-  --dark: #1f1c26;
-  --accent: #9c4a5c;
-  --accent-dark: #743746;
-  --accent-light: #f1e3e6;
-  --cream: #f6f3ee;
+  --black: #565264;
+  --dark: #454252;
+  --accent: #a6808c;
+  --accent-dark: #706677;
+  --accent-light: #ccb7ae;
+  --cream: #d6cfcb;
   --white: #ffffff;
   --gray: #8a8590;
-  --gray-light: #e6e2db;
+  --gray-light: #beb2b8;
   --font-body: 'Poppins', sans-serif;
   --font-display: 'Bebas Neue', sans-serif;
   --radius: 6px;
@@ -96,7 +96,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: 0.5px; line-h
   position: fixed;
   top: 0; left: 0; right: 0;
   z-index: 1000;
-  background: rgba(247, 244, 239, 0.9);
+  background: rgba(214, 207, 203, 0.9);
   backdrop-filter: blur(14px);
   border-bottom: 1px solid rgba(20,18,26,0.08);
   transition: transform 0.3s ease;
@@ -239,7 +239,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: 0.5px; line-h
 .hero__bg {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, #f9f6f1 0%, #f6f3ee 100%);
+  background: linear-gradient(180deg, #dcd6d2 0%, #d6cfcb 100%);
   z-index: -2;
 }
 .hero__bg::before {
@@ -575,7 +575,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: 0.5px; line-h
 }
 
 /* ==================== FOOTER ==================== */
-.footer { background: #f1ede6; padding: 80px 0 0; }
+.footer { background: #e2dcd8; padding: 80px 0 0; }
 .footer__grid {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1fr;

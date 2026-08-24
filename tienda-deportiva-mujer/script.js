@@ -8,6 +8,7 @@ const CART_KEY = 'velvet_cart';
 let cart = loadCart();
 let activeFilter = 'all';
 let PRODUCTS = [];
+let CATEGORIES = [];
 
 async function loadCategories() {
   const supabase = await getSupabase();
@@ -16,6 +17,7 @@ async function loadCategories() {
     console.error('Error al cargar categorías:', error);
     return;
   }
+  CATEGORIES = data;
   const catGrid = document.getElementById('catGrid');
   catGrid.innerHTML = data.map((c, i) => `
     <a href="#productos" class="cat-card ${i === 0 ? 'cat-card--big' : ''}" data-filter="${c.slug}">
@@ -88,7 +90,7 @@ function renderProducts() {
           : `<div class="img-fallback" style="background:${p.color}"></div>`}
       </div>
       <div class="product-card__body">
-        <span class="product-cat">${p.cat}</span>
+        <span class="product-cat">${CATEGORIES.find(c => c.slug === p.cat)?.name || p.cat}</span>
         <h3>${p.name}</h3>
         <div class="product-price-row">
           <span class="product-price">${p.oldPrice ? `<small>${fmt(p.oldPrice)}</small>` : ''}${fmt(p.price)}</span>
