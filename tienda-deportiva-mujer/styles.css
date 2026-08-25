@@ -51,7 +51,8 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 500; letter-spac
   border-radius: 999px;
   font-family: var(--font-body);
   font-weight: 700;
-  font-size: 0.94rem;
+  font-size: 15px;
+  letter-spacing: 0.01em;
   border: 1.5px solid transparent;
   transition: all 0.25s ease;
   white-space: nowrap;
@@ -118,10 +119,8 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 500; letter-spac
 
 .nav { display: flex; align-items: center; gap: 36px; }
 .nav__link {
-  font-size: 0.85rem;
+  font-size: 14px;
   font-weight: 600;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
   position: relative;
   padding: 6px 0;
 }
@@ -287,37 +286,17 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 500; letter-spac
 }
 @keyframes bounce { 0%,100%{transform:translate(-50%,0);} 50%{transform:translate(-50%,8px);} }
 
-/* ==================== MARQUEE ==================== */
-.marquee {
-  background: var(--black);
-  color: var(--white);
-  overflow: hidden;
-  padding: 14px 0;
+/* ==================== LA COLECCIÓN ==================== */
+.collection {
+  padding: 96px 0;
+  background: color-mix(in srgb, var(--cream) 30%, white);
 }
-.marquee__track {
-  display: flex;
-  gap: 24px;
-  white-space: nowrap;
-  width: max-content;
-  animation: scroll-left 22s linear infinite;
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 1.8px;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.85);
-}
-@keyframes scroll-left {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
-}
-
-/* ==================== CATEGORIES ==================== */
-.categories { padding: 100px 0 80px; }
 .cat-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   grid-template-rows: repeat(2, 170px);
   gap: 16px;
+  margin-bottom: 70px;
 }
 .cat-card {
   position: relative;
@@ -358,28 +337,8 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 500; letter-spac
 .cat-card__label h3 { font-size: 1.4rem; }
 .cat-card__label span { font-size: 0.75rem; font-weight: 500; letter-spacing: 0.5px; opacity: 0.85; }
 
-/* ==================== PROMO BANNER ==================== */
-.promo-banner {
-  background: var(--black);
-  color: var(--white);
-  padding: 100px 0;
-  position: relative;
-  overflow: hidden;
-}
-.promo-banner::before {
-  content: '';
-  position: absolute;
-  top: -20%; right: -10%;
-  width: 500px; height: 500px;
-  background: radial-gradient(circle, rgba(255,255,255,0.06), transparent 70%);
-  border-radius: 50%;
-}
-.promo-banner__inner { position: relative; max-width: 560px; }
-.promo-banner h2 { font-size: clamp(2rem, 3vw + 1rem, 3rem); max-width: 12ch; margin: 16px 0 22px; }
-.promo-banner p { font-family: var(--font-body); color: rgba(255,255,255,0.82); font-size: 1.03rem; margin-bottom: 32px; line-height: 1.7; }
+.collection__products-head { margin-top: 70px; }
 
-/* ==================== PRODUCTS ==================== */
-.products { padding: 100px 0; }
 .filters {
   display: flex;
   gap: 10px;
@@ -451,10 +410,10 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 500; letter-spac
 .product-fav.active { color: var(--accent); }
 
 .product-card__body { padding: 20px 22px 24px; }
-.product-cat { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--gray); font-weight: 700; }
-.product-card__body h3 { font-family: var(--font-body); font-size: 1.05rem; font-weight: 700; margin: 6px 0 10px; color: var(--black); }
-.product-price-row { display: flex; align-items: center; justify-content: space-between; }
-.product-price { font-weight: 700; font-size: 1rem; color: var(--accent); }
+.product-cat { font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--gray); font-weight: 700; }
+.product-card__body h3 { font-family: var(--font-body); font-size: 17px; font-weight: 700; margin: 6px 0 10px; color: var(--black); }
+.product-price-row { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
+.product-price { font-weight: 700; font-size: 14px; color: var(--accent); }
 .product-price small { font-weight: 400; color: var(--gray); text-decoration: line-through; margin-right: 6px; font-size: 0.85rem; }
 .add-btn {
   width: 38px; height: 38px;
@@ -471,7 +430,8 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 500; letter-spac
 .product-badge--out { background: var(--gray); }
 
 /* ==================== BENEFITS ==================== */
-.benefits { padding: 80px 0; background: var(--white); }
+.benefits { padding: 88px 0; background: var(--white); }
+.benefits__title { font-size: clamp(1.8rem, 2.6vw + 1rem, 2.6rem); max-width: 20ch; margin-bottom: 44px; }
 .benefits__grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -488,11 +448,12 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 500; letter-spac
   border-radius: 50%;
   background: var(--white);
   display: flex; align-items: center; justify-content: center;
-  font-size: 1.4rem;
+  color: var(--accent);
   margin-bottom: 16px;
 }
-.benefit h3 { font-family: var(--font-body); font-size: 1.05rem; font-weight: 800; margin-bottom: 8px; }
-.benefit p { color: var(--gray); font-size: 0.9rem; line-height: 1.55; }
+.benefit__icon svg { width: 22px; height: 22px; }
+.benefit h3 { font-family: var(--font-body); font-size: 17px; font-weight: 800; margin-bottom: 8px; color: var(--black); }
+.benefit p { color: var(--gray); font-size: 14.5px; line-height: 1.55; }
 
 /* ==================== ABOUT ==================== */
 .about {
@@ -515,12 +476,12 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 500; letter-spac
     radial-gradient(circle at 30% 25%, rgba(214,207,203,0.28), transparent 55%),
     linear-gradient(150deg, var(--gray), var(--accent) 60%, var(--accent-light));
 }
-.about h2 { color: var(--white); max-width: 12ch; }
-.about__text p { font-family: var(--font-body); color: rgba(255,255,255,0.82); line-height: 1.7; margin-bottom: 0; margin-top: 22px; }
+.about h2 { color: var(--white); font-size: clamp(2rem, 3vw + 1rem, 3rem); max-width: 12ch; }
+.about__text p { font-family: var(--font-body); font-size: 16.5px; color: rgba(255,255,255,0.82); line-height: 1.7; margin-bottom: 0; margin-top: 22px; }
 .about__values { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 28px; }
 .about__values div {
   font-family: var(--font-body);
-  font-size: 0.8rem;
+  font-size: 12.5px;
   font-weight: 700;
   padding: 8px 16px;
   border-radius: 100px;
@@ -533,40 +494,6 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 500; letter-spac
 .about__values h4 { font-family: var(--font-body); font-size: 0.8rem; font-weight: 700; }
 .about__values span { font-size: 0.8rem; font-weight: 700; }
 
-/* ==================== TESTIMONIALS ==================== */
-.testimonials { padding: 100px 0; background: var(--white); }
-.testi-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 26px;
-}
-.testi-grid--empty {
-  grid-template-columns: 1fr;
-  padding: 40px 0;
-}
-.testi-empty-msg {
-  text-align: center;
-  color: var(--gray);
-  font-size: 0.95rem;
-}
-.testi-card {
-  background: var(--cream);
-  border-radius: var(--radius);
-  padding: 32px;
-}
-.testi-stars { color: var(--accent-dark); letter-spacing: 2px; margin-bottom: 16px; }
-.testi-card p { color: #4a4552; line-height: 1.6; margin-bottom: 24px; font-size: 0.95rem; }
-.testi-author { display: flex; align-items: center; gap: 12px; }
-.testi-avatar {
-  width: 42px; height: 42px;
-  border-radius: 50%;
-  background: var(--black);
-  color: white;
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: 0.85rem;
-}
-.testi-author strong { display: block; font-size: 0.9rem; }
-.testi-author span { font-size: 0.78rem; color: var(--gray); }
 
 /* ==================== NEWSLETTER ==================== */
 .newsletter {
@@ -791,7 +718,6 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 500; letter-spac
   .product-grid { grid-template-columns: repeat(3, 1fr); }
   .about__inner { grid-template-columns: 1fr; gap: 40px; }
   .about__img { aspect-ratio: 16/9; }
-  .testi-grid { grid-template-columns: repeat(2, 1fr); }
   .footer__grid { grid-template-columns: 1fr 1fr; }
 }
 
@@ -812,10 +738,8 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 500; letter-spac
   .hero__stats { gap: 28px; }
   .product-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
   .benefits__grid { grid-template-columns: repeat(2, 1fr); gap: 30px; }
-  .testi-grid { grid-template-columns: 1fr; }
   .footer__grid { grid-template-columns: 1fr; gap: 30px; }
   .newsletter__form { flex-direction: column; }
-  .promo-banner { text-align: left; }
 }
 
 @media (max-width: 480px) {
