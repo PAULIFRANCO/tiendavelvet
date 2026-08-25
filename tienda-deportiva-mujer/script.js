@@ -18,23 +18,8 @@ async function loadCategories() {
     return;
   }
   CATEGORIES = data;
-  const catGrid = document.getElementById('catGrid');
-  catGrid.innerHTML = data.map((c, i) => `
-    <a href="#productos" class="cat-card ${i === 0 ? 'cat-card--big' : ''}" data-filter="${c.slug}">
-      <div class="cat-card__img ${c.image_url ? '' : `cat-img-${(i % 5) + 1}`}"
-        ${c.image_url ? `style="background-image:url('${c.image_url}');background-size:cover;background-position:center;"` : ''}></div>
-      <div class="cat-card__label"><h3>${c.name}</h3><span>Ver más →</span></div>
-    </a>
-  `).join('');
-
   const navDropdown = document.getElementById('navDropdown');
-  navDropdown.innerHTML = data.map(c => `<a href="#productos" data-filter="${c.slug}">${c.name}</a>`).join('');
-
-  const filters = document.getElementById('filters');
-  filters.querySelectorAll('.filter-btn:not([data-filter="all"])').forEach(b => b.remove());
-  filters.insertAdjacentHTML('beforeend', data.map(c =>
-    `<button class="filter-btn" data-filter="${c.slug}">${c.name}</button>`
-  ).join(''));
+  navDropdown.innerHTML = data.map(c => `<a href="#categorias" data-filter="${c.slug}">${c.name}</a>`).join('');
 }
 loadCategories();
 
@@ -104,33 +89,14 @@ function renderProducts() {
 loadProducts();
 
 // ==================== FILTERS ====================
-document.getElementById('filters').addEventListener('click', e => {
-  const btn = e.target.closest('.filter-btn');
-  if (!btn) return;
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  activeFilter = btn.dataset.filter;
-  renderProducts();
-});
-
-// Category cards (creadas dinámicamente) y links del desplegable del nav
-// disparan un filtro + scroll (el scroll lo hace el propio href="#productos").
-function applyCategoryFilter(filter) {
-  activeFilter = filter;
-  document.querySelectorAll('.filter-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.filter === filter);
-  });
-  renderProducts();
-}
-
-document.getElementById('catGrid').addEventListener('click', e => {
-  const card = e.target.closest('.cat-card');
-  if (card) applyCategoryFilter(card.dataset.filter);
-});
-
+// Los links del desplegable del nav filtran el catálogo y llevan a la sección
+// (el scroll lo hace el propio href="#categorias").
 document.getElementById('navDropdown').addEventListener('click', e => {
   const link = e.target.closest('a[data-filter]');
-  if (link) applyCategoryFilter(link.dataset.filter);
+  if (link) {
+    activeFilter = link.dataset.filter;
+    renderProducts();
+  }
 });
 
 // ==================== FAVORITES ====================
