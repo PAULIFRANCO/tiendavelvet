@@ -564,7 +564,8 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 500; letter-spac
 .cart-item__remove { color: var(--gray); font-size: 0.75rem; text-decoration: underline; }
 
 .cart-panel__footer { padding: 22px 24px; border-top: 1px solid var(--gray-light); }
-.cart-total { display: flex; justify-content: space-between; margin-bottom: 16px; font-size: 1.05rem; }
+.cart-total { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 1.05rem; }
+.cart-shipping-note { font-size: 0.78rem; color: var(--gray); margin-bottom: 16px; }
 
 /* ==================== CHECKOUT MODAL ==================== */
 .checkout-overlay {
@@ -626,6 +627,16 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 500; letter-spac
 }
 .checkout-form input:focus { border-color: var(--black); }
 .checkout-form__row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.checkout-shipping {
+  font-size: 0.85rem;
+  color: var(--black);
+  background: color-mix(in srgb, var(--cream) 45%, white);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 6px;
+  min-height: 20px;
+}
+.checkout-shipping:empty { display: none; }
 .checkout-form .btn { margin-top: 6px; }
 
 /* ==================== TOAST ==================== */

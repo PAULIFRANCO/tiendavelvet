@@ -222,10 +222,34 @@ const checkoutModal = document.getElementById('checkoutModal');
 const checkoutForm = document.getElementById('checkoutForm');
 const checkoutSubmitBtn = document.getElementById('checkoutSubmitBtn');
 
+// Mismas reglas que api/create-preference.js — esto es solo una vista previa
+// para la clienta; el costo real y definitivo siempre se calcula en el servidor.
+const FREE_SHIPPING_THRESHOLD = 100000;
+const SHIPPING_SANTA_FE = 3000;
+const SHIPPING_OTHER = 10000;
+
+function updateShippingSummary() {
+  const province = document.getElementById('shipProvince').value.trim();
+  const summaryEl = document.getElementById('shippingSummary');
+  const subtotal = cart.reduce((s, i) => s + i.qty * i.price, 0);
+
+  if (!province) {
+    summaryEl.textContent = '';
+    return;
+  }
+  const isSantaFe = /santa\s*fe/i.test(province);
+  const cost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : (isSantaFe ? SHIPPING_SANTA_FE : SHIPPING_OTHER);
+  summaryEl.innerHTML = cost === 0
+    ? `Envío: <strong>¡Gratis! 🎉</strong> &nbsp;·&nbsp; Total: <strong>${fmt(subtotal)}</strong>`
+    : `Envío a ${isSantaFe ? 'Santa Fe' : 'resto del país'}: <strong>${fmt(cost)}</strong> &nbsp;·&nbsp; Total: <strong>${fmt(subtotal + cost)}</strong>`;
+}
+document.getElementById('shipProvince').addEventListener('input', updateShippingSummary);
+
 function openCheckout() {
   closeCart();
   checkoutOverlay.classList.add('active');
   checkoutModal.classList.add('active');
+  updateShippingSummary();
 }
 function closeCheckout() {
   checkoutOverlay.classList.remove('active');
