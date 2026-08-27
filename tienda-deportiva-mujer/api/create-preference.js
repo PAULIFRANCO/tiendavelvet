@@ -5,6 +5,18 @@ import { supabase } from '../lib/supabase.js';
 const MAX_QTY_PER_ITEM = 20;
 const REQUIRED_SHIPPING_FIELDS = ['fullName', 'phone', 'address', 'city', 'province', 'zip'];
 
+// Envío: tabla fija por zona (mientras no tenemos cuenta de Correo Argentino
+// Empresas para cotizar automático — ver ENVIOS-Y-EMAILS-SETUP.md).
+// Se calcula server-side: nunca se confía en un costo de envío que venga del cliente.
+const FREE_SHIPPING_THRESHOLD = 100000;
+const SHIPPING_SANTA_FE = 3000;
+const SHIPPING_OTHER = 10000;
+
+function calculateShipping(province, subtotal) {
+  if (subtotal >= FREE_SHIPPING_THRESHOLD) return 0;
+  return /santa\s*fe/i.test(province) ? SHIPPING_SANTA_FE : SHIPPING_OTHER;
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
@@ -76,6 +88,18 @@ export default async function handler(req, res) {
       province: shipping.province.trim(),
       zip: shipping.zip.trim(),
     };
+
+    const shippingCost = calculateShipping(cleanShipping.province, total);
+    if (shippingCost > 0) {
+      orderItems.push({
+        id: 'shipping',
+        title: 'Envío',
+        quantity: 1,
+        unit_price: shippingCost,
+        currency_id: 'ARS',
+      });
+      total += shippingCost;
+    }
 
     const { error: dbError } = await supabase.from('orders').insert({
       id: orderId,

@@ -47,6 +47,7 @@ function isValidSignature(req, dataId) {
 // Se llama solo una vez, cuando el pedido pasa a "approved" por primera vez.
 async function discountStock(items) {
   for (const item of items) {
+    if (item.id === 'shipping') continue; // no es un producto, es el costo de envío
     const productId = Number(item.id);
     const { error } = await supabase.rpc('discount_stock', {
       p_id: productId,
