@@ -50,6 +50,20 @@ export default async function handler(req, res) {
       .in('id', ids);
     if (productsError) throw productsError;
 
+    // Si algún ítem trae variante (talle/color), buscamos también su stock
+    // propio — para esos productos el stock real vive en la variante, no en
+    // el producto.
+    const variantIds = items.map(i => Number(i?.variantId)).filter(Number.isFinite);
+    let variants = [];
+    if (variantIds.length > 0) {
+      const { data: variantsData, error: variantsError } = await supabase
+        .from('product_variants')
+        .select('id, product_id, size, color, stock')
+        .in('id', variantIds);
+      if (variantsError) throw variantsError;
+      variants = variantsData;
+    }
+
     // Precio y stock SIEMPRE verificados server-side contra la base de datos.
     // Nunca se confía en un precio que venga del cliente.
     const orderItems = [];
@@ -62,16 +76,34 @@ export default async function handler(req, res) {
       if (!product || !Number.isInteger(qty) || qty <= 0 || qty > MAX_QTY_PER_ITEM) {
         return res.status(400).json({ error: 'Carrito inválido' });
       }
-      if (qty > product.stock) {
+
+      let variant = null;
+      if (rawItem?.variantId != null) {
+        variant = variants.find(v => v.id === Number(rawItem.variantId) && v.product_id === product.id);
+        // Si mandaron un variantId pero no corresponde a este producto (o no
+        // existe), tratamos el pedido como inválido en vez de ignorarlo en
+        // silencio — evita comprar "a ciegas" una combinación inexistente.
+        if (!variant) {
+          return res.status(400).json({ error: `Elegí un talle/color válido para "${product.name}"` });
+        }
+      }
+
+      const availableStock = variant ? variant.stock : product.stock;
+      if (qty > availableStock) {
         return res.status(409).json({ error: `Sin stock suficiente de "${product.name}"` });
       }
 
+      const variantLabel = variant
+        ? [variant.size, variant.color].filter(Boolean).join(' / ')
+        : '';
+
       orderItems.push({
         id: String(product.id),
-        title: product.name,
+        title: variantLabel ? `${product.name} (${variantLabel})` : product.name,
         quantity: qty,
         unit_price: product.price,
         currency_id: 'ARS',
+        ...(variant ? { variantId: variant.id } : {}),
       });
       total += product.price * qty;
     }

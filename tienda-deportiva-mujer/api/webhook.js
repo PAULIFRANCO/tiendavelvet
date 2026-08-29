@@ -41,13 +41,26 @@ function isValidSignature(req, dataId) {
   }
 }
 
-// Descuenta stock por cada producto del pedido, usando la función atómica
-// discount_stock (ver SEGURIDAD-SETUP.md) para que dos aprobaciones
-// simultáneas del mismo producto no pisen el stock una a la otra.
+// Descuenta stock por cada producto del pedido, usando funciones atómicas
+// (discount_stock / discount_variant_stock, ver SEGURIDAD-SETUP.md y
+// VARIANTES-SETUP.md) para que dos aprobaciones simultáneas del mismo
+// producto o variante no se pisen entre sí.
 // Se llama solo una vez, cuando el pedido pasa a "approved" por primera vez.
 async function discountStock(items) {
   for (const item of items) {
     if (item.id === 'shipping') continue; // no es un producto, es el costo de envío
+
+    // Si el ítem tiene talle/color elegido, el stock real vive en la
+    // variante — descontamos ahí en vez de en el producto.
+    if (item.variantId != null) {
+      const { error } = await supabase.rpc('discount_variant_stock', {
+        p_variant_id: Number(item.variantId),
+        p_qty: item.quantity,
+      });
+      if (error) console.error(`Error al descontar stock de la variante ${item.variantId}:`, error);
+      continue;
+    }
+
     const productId = Number(item.id);
     const { error } = await supabase.rpc('discount_stock', {
       p_id: productId,
