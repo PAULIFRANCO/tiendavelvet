@@ -370,9 +370,8 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 500; letter-spac
 .benefits__title { font-size: clamp(1.8rem, 2.6vw + 1rem, 2.6rem); max-width: 20ch; margin-bottom: 44px; }
 .benefits__grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 24px;
-  max-width: 640px;
 }
 .benefit {
   background: color-mix(in srgb, var(--cream) 45%, white);
@@ -778,7 +777,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 500; letter-spac
   .nav.active .nav__link { padding: 12px 0; border-bottom: 1px solid var(--gray-light); }
   .hero__stats { gap: 28px; }
   .product-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
-  .benefits__grid { grid-template-columns: 1fr; gap: 20px; max-width: 400px; }
+  .benefits__grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
   .footer__grid { grid-template-columns: 1fr; gap: 30px; }
   .newsletter__form { flex-direction: column; }
 }
