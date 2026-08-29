@@ -20,6 +20,13 @@ async function loadCategories() {
   CATEGORIES = data;
   const navDropdown = document.getElementById('navDropdown');
   navDropdown.innerHTML = data.map(c => `<a href="#categorias" data-filter="${c.slug}">${c.name}</a>`).join('');
+
+  // El footer muestra las mismas categorías reales (nunca texto fijo a mano,
+  // para que no se desactualice si cambian las categorías del catálogo).
+  const footerCategories = document.getElementById('footerCategories');
+  if (footerCategories) {
+    footerCategories.innerHTML = data.map(c => `<a href="#categorias" data-filter="${c.slug}">${c.name}</a>`).join('');
+  }
 }
 loadCategories();
 
@@ -118,15 +125,17 @@ function renderProducts() {
 loadProducts();
 
 // ==================== FILTERS ====================
-// Los links del desplegable del nav filtran el catálogo y llevan a la sección
-// (el scroll lo hace el propio href="#categorias").
-document.getElementById('navDropdown').addEventListener('click', e => {
+// Los links del desplegable del nav y del footer filtran el catálogo y
+// llevan a la sección (el scroll lo hace el propio href="#categorias").
+function handleCategoryLinkClick(e) {
   const link = e.target.closest('a[data-filter]');
   if (link) {
     activeFilter = link.dataset.filter;
     renderProducts();
   }
-});
+}
+document.getElementById('navDropdown').addEventListener('click', handleCategoryLinkClick);
+document.getElementById('footerCategories').addEventListener('click', handleCategoryLinkClick);
 
 // ==================== FAVORITES ====================
 productGrid.addEventListener('click', e => {
