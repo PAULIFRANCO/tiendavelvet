@@ -269,6 +269,37 @@ table { border-collapse: collapse; width: 100%; }
 }
 .file-label:hover { border-color: var(--black); }
 .file-label input { display: none; }
+.file-label--small { padding: 6px 10px; font-size: 0.66rem; }
+
+.gallery-cell {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 220px;
+}
+.gallery-thumb {
+  position: relative;
+  width: 40px; height: 40px;
+}
+.gallery-thumb img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  border-radius: 3px;
+  display: block;
+}
+.gallery-thumb__remove {
+  position: absolute;
+  top: -6px; right: -6px;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: var(--black);
+  color: var(--white);
+  font-size: 0.55rem;
+  line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  border: none;
+  cursor: pointer;
+}
 
 /* ==================== TOAST ==================== */
 .toast {

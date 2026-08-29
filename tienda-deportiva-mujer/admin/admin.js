@@ -252,7 +252,7 @@ function fillCategorySelect(select, categories, selectedSlug) {
 
 async function loadProducts(supabase) {
   const tbody = document.getElementById('productsBody');
-  tbody.innerHTML = '<tr><td colspan="6" class="admin-empty">Cargando productos...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="7" class="admin-empty">Cargando productos...</td></tr>';
 
   const [{ data, error }, categories] = await Promise.all([
     supabase.from('products').select('*').order('id'),
@@ -263,7 +263,7 @@ async function loadProducts(supabase) {
   if (newProductCat) fillCategorySelect(newProductCat, categories);
 
   if (error) {
-    tbody.innerHTML = '<tr><td colspan="6" class="admin-empty">No se pudieron cargar los productos.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="admin-empty">No se pudieron cargar los productos.</td></tr>';
     console.error(error);
     return;
   }
@@ -284,6 +284,20 @@ async function loadProducts(supabase) {
           Subir foto
           <input type="file" accept="image/*" data-upload="${p.id}">
         </label>
+      </td>
+      <td>
+        <div class="gallery-cell" data-gallery="${p.id}">
+          ${(p.images || []).map((url, i) => `
+            <div class="gallery-thumb">
+              <img src="${url}" alt="Foto extra ${i + 1}">
+              <button type="button" class="gallery-thumb__remove" data-remove-gallery="${p.id}" data-index="${i}" aria-label="Quitar foto">✕</button>
+            </div>
+          `).join('')}
+          <label class="file-label file-label--small">
+            + Agregar
+            <input type="file" accept="image/*" data-upload-gallery="${p.id}">
+          </label>
+        </div>
       </td>
     </tr>
   `).join('');
@@ -353,6 +367,54 @@ async function loadProducts(supabase) {
         showToast('No se pudo subir la foto');
         console.error(err);
       }
+    });
+  });
+
+  tbody.querySelectorAll('[data-upload-gallery]').forEach(input => {
+    input.addEventListener('change', async () => {
+      const file = input.files[0];
+      if (!file) return;
+      const id = Number(input.dataset.uploadGallery);
+      showToast('Subiendo foto...');
+
+      try {
+        const ext = file.name.split('.').pop();
+        const path = `product-${id}-gallery-${Date.now()}.${ext}`;
+        const url = await uploadImageViaApi(supabase, file, path);
+
+        const product = data.find(p => p.id === id);
+        const newImages = [...(product?.images || []), url];
+
+        const { error: updateError } = await supabase
+          .from('products')
+          .update({ images: newImages })
+          .eq('id', id);
+
+        if (updateError) throw updateError;
+
+        showToast('Foto agregada a la galería');
+        loadProducts(supabase);
+      } catch (err) {
+        showToast('No se pudo subir la foto');
+        console.error(err);
+      }
+    });
+  });
+
+  tbody.querySelectorAll('[data-remove-gallery]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = Number(btn.dataset.removeGallery);
+      const index = Number(btn.dataset.index);
+      const product = data.find(p => p.id === id);
+      const newImages = (product?.images || []).filter((_, i) => i !== index);
+
+      const { error: updateError } = await supabase
+        .from('products')
+        .update({ images: newImages })
+        .eq('id', id);
+
+      showToast(updateError ? 'No se pudo quitar la foto' : 'Foto quitada');
+      if (!updateError) loadProducts(supabase);
     });
   });
 }
