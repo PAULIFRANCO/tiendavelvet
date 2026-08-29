@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Producto — VELVET</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="pd-body">
+
+<!-- ===== HEADER (simple) ===== -->
+<header class="header pd-header">
+  <div class="container header__inner">
+    <a href="/index.html#inicio" class="logo">velvet<span>.</span></a>
+    <a href="/index.html?cart=1" class="icon-btn cart-btn" aria-label="Carrito">
+      <svg viewBox="0 0 24 24"><path d="M3 3h2l.4 2M7 13h10l3-8H5.4M7 13L5.4 5M7 13l-2.3 4.6A1 1 0 005.6 19H17M17 19a2 2 0 100 4 2 2 0 000-4zM9 19a2 2 0 100 4 2 2 0 000-4z" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span class="cart-count" id="cartCount">0</span>
+    </a>
+  </div>
+</header>
+
+<main class="pd-main">
+  <div class="container">
+    <a href="/index.html#categorias" class="pd-back">← Volver al catálogo</a>
+
+    <div id="pdLoading" class="pd-loading">Cargando producto...</div>
+    <div id="pdNotFound" class="pd-loading" hidden>No encontramos ese producto. <a href="/index.html#categorias">Volver al catálogo</a></div>
+
+    <div id="pdContent" class="pd-grid" hidden>
+      <div class="pd-gallery">
+        <div class="pd-gallery__main" id="pdMainImageWrap">
+          <img id="pdMainImage" alt="">
+        </div>
+        <div class="pd-gallery__thumbs" id="pdThumbs"></div>
+      </div>
+
+      <div class="pd-info">
+        <span class="pd-cat" id="pdCat"></span>
+        <h1 id="pdName"></h1>
+        <div class="pd-price-row">
+          <span class="pd-price" id="pdPrice"></span>
+          <span class="pd-badge" id="pdBadge" hidden></span>
+        </div>
+        <p class="pd-stock" id="pdStock"></p>
+
+        <div class="pd-qty">
+          <button type="button" id="pdQtyMinus" aria-label="Restar">−</button>
+          <span id="pdQtyValue">1</span>
+          <button type="button" id="pdQtyPlus" aria-label="Sumar">+</button>
+        </div>
+
+        <button type="button" class="btn btn--primary btn--full" id="pdAddBtn">Agregar al carrito</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ===== TOAST ===== -->
+<div class="toast" id="toast"></div>
+
+<script type="module" src="producto.js"></script>
+</body>
+</html>
