@@ -252,23 +252,28 @@ function fillCategorySelect(select, categories, selectedSlug) {
 
 async function loadProducts(supabase) {
   const tbody = document.getElementById('productsBody');
-  tbody.innerHTML = '<tr><td colspan="7" class="admin-empty">Cargando productos...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="8" class="admin-empty">Cargando productos...</td></tr>';
 
-  const [{ data, error }, categories] = await Promise.all([
+  const [{ data, error }, categories, { data: allVariants, error: variantsError }] = await Promise.all([
     supabase.from('products').select('*').order('id'),
     fetchCategories(supabase),
+    supabase.from('product_variants').select('*').order('id'),
   ]);
 
   const newProductCat = document.getElementById('newProductCat');
   if (newProductCat) fillCategorySelect(newProductCat, categories);
 
   if (error) {
-    tbody.innerHTML = '<tr><td colspan="7" class="admin-empty">No se pudieron cargar los productos.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="admin-empty">No se pudieron cargar los productos.</td></tr>';
     console.error(error);
     return;
   }
+  if (variantsError) console.error('Error al cargar variantes:', variantsError);
+  const variantsByProduct = id => (allVariants || []).filter(v => v.product_id === id);
 
-  tbody.innerHTML = data.map(p => `
+  tbody.innerHTML = data.map(p => {
+    const variants = variantsByProduct(p.id);
+    return `
     <tr data-id="${p.id}">
       <td>
         ${p.image_url
@@ -299,8 +304,39 @@ async function loadProducts(supabase) {
           </label>
         </div>
       </td>
+      <td>
+        <button type="button" class="btn-link" data-toggle-variants="${p.id}">
+          ${variants.length > 0 ? `Gestionar (${variants.length})` : 'Agregar talles'}
+        </button>
+      </td>
     </tr>
-  `).join('');
+    <tr class="variants-row" data-variants-for="${p.id}" hidden>
+      <td colspan="8">
+        <div class="variants-panel">
+          <table class="variants-table">
+            <thead><tr><th>Talle</th><th>Color</th><th>Stock</th><th></th></tr></thead>
+            <tbody data-variants-list="${p.id}">
+              ${variants.map(v => `
+                <tr data-variant-id="${v.id}">
+                  <td>${escapeHtml(v.size || '—')}</td>
+                  <td>${escapeHtml(v.color || '—')}</td>
+                  <td><input type="text" inputmode="numeric" pattern="[0-9]*" class="stock-input variant-stock-input" data-variant-stock="${v.id}" value="${v.stock}"></td>
+                  <td><button type="button" class="variant-remove" data-remove-variant="${v.id}" data-product="${p.id}" aria-label="Borrar variante">✕</button></td>
+                </tr>
+              `).join('') || '<tr><td colspan="4" class="admin-empty">Todavía no tiene talles/colores cargados.</td></tr>'}
+            </tbody>
+          </table>
+          <form class="variant-add-form" data-variant-form="${p.id}">
+            <input type="text" placeholder="Talle (ej: M)" data-variant-size maxlength="10">
+            <input type="text" placeholder="Color (ej: Negro)" data-variant-color maxlength="30">
+            <input type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Stock" data-variant-new-stock required>
+            <button type="submit" class="btn btn--outline">+ Agregar</button>
+          </form>
+        </div>
+      </td>
+    </tr>
+  `;
+  }).join('');
 
   tbody.querySelectorAll('[data-cat]').forEach(select => {
     const id = Number(select.dataset.cat);
@@ -415,6 +451,79 @@ async function loadProducts(supabase) {
 
       showToast(updateError ? 'No se pudo quitar la foto' : 'Foto quitada');
       if (!updateError) loadProducts(supabase);
+    });
+  });
+
+  tbody.querySelectorAll('[data-toggle-variants]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.toggleVariants;
+      const row = tbody.querySelector(`[data-variants-for="${id}"]`);
+      if (row) row.hidden = !row.hidden;
+    });
+  });
+
+  tbody.querySelectorAll('[data-variant-stock]').forEach(input => {
+    input.addEventListener('change', async () => {
+      const variantId = Number(input.dataset.variantStock);
+      const newStock = Math.max(0, Number(input.value) || 0);
+      input.value = newStock;
+      const { error: updateError } = await supabase
+        .from('product_variants')
+        .update({ stock: newStock })
+        .eq('id', variantId);
+      showToast(updateError ? 'No se pudo actualizar el stock' : 'Stock actualizado');
+    });
+  });
+
+  tbody.querySelectorAll('[data-remove-variant]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const variantId = Number(btn.dataset.removeVariant);
+      const productId = Number(btn.dataset.product);
+      const { error: deleteError } = await supabase
+        .from('product_variants')
+        .delete()
+        .eq('id', variantId);
+
+      showToast(deleteError ? 'No se pudo borrar' : 'Talle/color borrado');
+      if (!deleteError) {
+        loadProducts(supabase).then(() => {
+          // Volvemos a abrir el panel de este producto después de recargar,
+          // para no perder el lugar donde estaba trabajando.
+          const row = tbody.querySelector(`[data-variants-for="${productId}"]`);
+          if (row) row.hidden = false;
+        });
+      }
+    });
+  });
+
+  tbody.querySelectorAll('[data-variant-form]').forEach(form => {
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const productId = Number(form.dataset.variantForm);
+      const size = form.querySelector('[data-variant-size]').value.trim() || null;
+      const color = form.querySelector('[data-variant-color]').value.trim() || null;
+      const stock = Math.max(0, Number(form.querySelector('[data-variant-new-stock]').value) || 0);
+
+      if (!size && !color) {
+        showToast('Cargá al menos un talle o un color');
+        return;
+      }
+
+      const { error: insertError } = await supabase
+        .from('product_variants')
+        .insert({ product_id: productId, size, color, stock });
+
+      if (insertError) {
+        showToast(insertError.code === '23505' ? 'Esa combinación ya existe' : 'No se pudo agregar');
+        console.error(insertError);
+        return;
+      }
+
+      showToast('Talle/color agregado');
+      loadProducts(supabase).then(() => {
+        const row = tbody.querySelector(`[data-variants-for="${productId}"]`);
+        if (row) row.hidden = false;
+      });
     });
   });
 }

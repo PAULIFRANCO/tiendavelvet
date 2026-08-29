@@ -301,6 +301,60 @@ table { border-collapse: collapse; width: 100%; }
   cursor: pointer;
 }
 
+/* ==================== VARIANTES (talle/color) ==================== */
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--black);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-link:hover { color: var(--accent); }
+
+.variants-row td { padding: 0; border-bottom: 1px solid var(--gray-light); }
+.variants-panel {
+  background: #f7f5f1;
+  padding: 18px 20px;
+  margin: 0;
+}
+.variants-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; max-width: 420px; }
+.variants-table th {
+  text-align: left;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--gray);
+  padding: 6px 10px 6px 0;
+}
+.variants-table td { padding: 6px 10px 6px 0; font-size: 0.85rem; }
+.variant-stock-input { width: 64px; }
+.variant-remove {
+  background: none;
+  border: none;
+  color: var(--gray);
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+.variant-remove:hover { color: #a13d3d; }
+
+.variant-add-form { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.variant-add-form input {
+  padding: 7px 10px;
+  border: 1px solid var(--gray-light);
+  border-radius: 2px;
+  font-size: 0.85rem;
+  width: 120px;
+}
+.variant-add-form input[data-variant-new-stock] { width: 80px; }
+.variant-add-form .btn {
+  height: auto;
+  padding: 7px 16px;
+  font-size: 0.78rem;
+}
+
 /* ==================== TOAST ==================== */
 .toast {
   position: fixed;
