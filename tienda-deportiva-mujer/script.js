@@ -70,13 +70,17 @@ function renderProducts() {
         ${p.badge && !outOfStock ? `<span class="product-badge">${p.badge}</span>` : ''}
         ${outOfStock ? `<span class="product-badge product-badge--out">SIN STOCK</span>` : ''}
         <button class="product-fav" data-fav="${p.id}" aria-label="Favorito">♡</button>
-        ${p.image
-          ? `<img src="${p.image}" alt="${p.name}" loading="lazy">`
-          : `<div class="img-fallback" style="background:${p.color}"></div>`}
+        <a href="producto.html?id=${p.id}" class="product-card__img-link">
+          ${p.image
+            ? `<img src="${p.image}" alt="${p.name}" loading="lazy">`
+            : `<div class="img-fallback" style="background:${p.color}"></div>`}
+        </a>
       </div>
       <div class="product-card__body">
-        <span class="product-cat">${CATEGORIES.find(c => c.slug === p.cat)?.name || p.cat}</span>
-        <h3>${p.name}</h3>
+        <a href="producto.html?id=${p.id}" class="product-card__title-link">
+          <span class="product-cat">${CATEGORIES.find(c => c.slug === p.cat)?.name || p.cat}</span>
+          <h3>${p.name}</h3>
+        </a>
         <div class="product-price-row">
           <span class="product-price">${p.oldPrice ? `<small>${fmt(p.oldPrice)}</small>` : ''}${fmt(p.price)}</span>
           <button class="add-btn" data-add="${p.id}" aria-label="Agregar al carrito" ${outOfStock ? 'disabled' : ''}>+</button>
@@ -215,6 +219,13 @@ function closeCart() {
 document.getElementById('cartToggle').addEventListener('click', openCart);
 document.getElementById('cartClose').addEventListener('click', closeCart);
 cartOverlay.addEventListener('click', closeCart);
+
+// Si llegamos desde "Ver carrito" en la página de un producto, abrimos el
+// carrito automáticamente al cargar.
+if (new URLSearchParams(location.search).get('cart') === '1') {
+  openCart();
+  history.replaceState(null, '', location.pathname + location.hash);
+}
 
 const checkoutBtn = document.getElementById('checkoutBtn');
 const checkoutOverlay = document.getElementById('checkoutOverlay');
