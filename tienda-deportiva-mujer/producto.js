@@ -127,6 +127,36 @@ async function init() {
     badgeEl.hidden = false;
   }
 
+  if (product.description) {
+    const descEl = document.getElementById('pdDescription');
+    descEl.textContent = product.description;
+    descEl.hidden = false;
+  }
+
+  if ((product.size_chart || []).length > 0) {
+    const cols = [
+      ['size', 'Talle'], ['bust', 'Busto'], ['waist', 'Cintura'],
+      ['hip', 'Cadera'], ['length', 'Largo'],
+    ].filter(([key]) => product.size_chart.some(row => row[key]));
+
+    document.getElementById('pdSizeChart').innerHTML = `
+      <h3 class="pd-size-chart__title">Guía de talles</h3>
+      <div class="pd-size-chart__scroll">
+        <table class="pd-size-chart__table">
+          <thead><tr>${cols.map(([, label]) => `<th>${label}</th>`).join('')}</tr></thead>
+          <tbody>
+            ${product.size_chart.map(row => `
+              <tr>${cols.map(([key]) => {
+                if (!row[key]) return '<td>—</td>';
+                return `<td>${key === 'size' ? row[key] : `${row[key]} cm`}</td>`;
+              }).join('')}</tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
   document.getElementById('pdLoading').hidden = true;
   document.getElementById('pdContent').hidden = false;
 
