@@ -2,11 +2,18 @@ import { getSupabase } from './data/supabase-client.js';
 
 const fmt = n => '$' + Number(n).toLocaleString('es-AR');
 const CART_KEY = 'velvet_cart';
+const SIZE_ORDER = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 
 function loadCart() {
   try {
     const stored = JSON.parse(localStorage.getItem(CART_KEY));
-    return Array.isArray(stored) ? stored : [];
+    if (!Array.isArray(stored)) return [];
+    return stored.map(item => ({
+      variantId: null,
+      variantLabel: '',
+      ...item,
+      key: item.key || `${item.id}::${item.variantId ?? ''}`,
+    }));
   } catch {
     return [];
   }
@@ -29,6 +36,17 @@ function showToast(text) {
   toastTimer = setTimeout(() => toast.classList.remove('show'), 2600);
 }
 
+function sortSizes(sizes) {
+  return [...sizes].sort((a, b) => {
+    const ia = SIZE_ORDER.indexOf(a);
+    const ib = SIZE_ORDER.indexOf(b);
+    if (ia === -1 && ib === -1) return a.localeCompare(b);
+    if (ia === -1) return 1;
+    if (ib === -1) return -1;
+    return ia - ib;
+  });
+}
+
 async function init() {
   updateCartCount();
 
@@ -40,9 +58,10 @@ async function init() {
   }
 
   const supabase = await getSupabase();
-  const [{ data: product, error }, { data: categories }] = await Promise.all([
+  const [{ data: product, error }, { data: categories }, { data: variants }] = await Promise.all([
     supabase.from('products').select('*').eq('id', id).single(),
     supabase.from('categories').select('*'),
+    supabase.from('product_variants').select('*').eq('product_id', id),
   ]);
 
   if (error || !product) {
@@ -108,42 +127,134 @@ async function init() {
     badgeEl.hidden = false;
   }
 
-  const outOfStock = product.stock <= 0;
-  const stockEl = document.getElementById('pdStock');
-  stockEl.textContent = outOfStock ? 'Sin stock por el momento' : `${product.stock} disponibles`;
-  stockEl.classList.toggle('pd-stock--out', outOfStock);
-
   document.getElementById('pdLoading').hidden = true;
   document.getElementById('pdContent').hidden = false;
 
-  // ==================== CANTIDAD ====================
-  let qty = 1;
+  // ==================== TALLE / COLOR ====================
+  const hasVariants = (variants || []).length > 0;
+  const hasSize = hasVariants && variants.some(v => v.size);
+  const hasColor = hasVariants && variants.some(v => v.color);
+  const sizes = hasSize ? sortSizes([...new Set(variants.map(v => v.size).filter(Boolean))]) : [];
+
+  let selectedSize = hasSize ? sizes[0] : null;
+  let selectedColor = null;
+
+  function colorsForSize(size) {
+    return [...new Set(
+      variants
+        .filter(v => !hasSize || v.size === size)
+        .map(v => v.color)
+        .filter(Boolean)
+    )];
+  }
+  function findVariant(size, color) {
+    return variants.find(v => (v.size || null) === (size || null) && (v.color || null) === (color || null));
+  }
+
+  if (hasColor) selectedColor = colorsForSize(selectedSize)[0] || null;
+
+  const variantsEl = document.getElementById('pdVariants');
+  const stockEl = document.getElementById('pdStock');
   const qtyValueEl = document.getElementById('pdQtyValue');
   const addBtn = document.getElementById('pdAddBtn');
+  let qty = 1;
+
+  function currentVariant() {
+    if (!hasVariants) return null;
+    return findVariant(selectedSize, selectedColor);
+  }
+
+  function currentStock() {
+    const variant = currentVariant();
+    return hasVariants ? (variant ? variant.stock : 0) : product.stock;
+  }
 
   function renderQty() {
     qtyValueEl.textContent = qty;
   }
 
+  function renderVariantPickers() {
+    let html = '';
+    if (hasSize) {
+      html += `<div class="pd-variant-group">
+        <span class="pd-variant-label">Talle</span>
+        <div class="pd-variant-pills" data-group="size">
+          ${sizes.map(s => `<button type="button" class="pd-pill${s === selectedSize ? ' active' : ''}" data-size="${s}">${s}</button>`).join('')}
+        </div>
+      </div>`;
+    }
+    if (hasColor) {
+      const colors = colorsForSize(selectedSize);
+      html += `<div class="pd-variant-group">
+        <span class="pd-variant-label">Color</span>
+        <div class="pd-variant-pills" data-group="color">
+          ${colors.map(c => `<button type="button" class="pd-pill${c === selectedColor ? ' active' : ''}" data-color="${c}">${c}</button>`).join('')}
+        </div>
+      </div>`;
+    }
+    variantsEl.innerHTML = html;
+  }
+
+  function refreshStockUI() {
+    qty = 1;
+    renderQty();
+    const stock = currentStock();
+    const outOfStock = stock <= 0;
+    stockEl.textContent = outOfStock ? 'Sin stock por el momento' : `${stock} disponibles`;
+    stockEl.classList.toggle('pd-stock--out', outOfStock);
+    addBtn.disabled = outOfStock;
+    addBtn.textContent = outOfStock ? 'Sin stock' : 'Agregar al carrito';
+  }
+
+  if (hasVariants) {
+    renderVariantPickers();
+    variantsEl.addEventListener('click', e => {
+      const sizeBtn = e.target.closest('[data-size]');
+      if (sizeBtn) {
+        selectedSize = sizeBtn.dataset.size;
+        if (hasColor) {
+          const colors = colorsForSize(selectedSize);
+          if (!colors.includes(selectedColor)) selectedColor = colors[0] || null;
+        }
+        renderVariantPickers();
+        refreshStockUI();
+        return;
+      }
+      const colorBtn = e.target.closest('[data-color]');
+      if (colorBtn) {
+        selectedColor = colorBtn.dataset.color;
+        renderVariantPickers();
+        refreshStockUI();
+      }
+    });
+  }
+
+  refreshStockUI();
+
   document.getElementById('pdQtyMinus').addEventListener('click', () => {
     if (qty > 1) { qty--; renderQty(); }
   });
   document.getElementById('pdQtyPlus').addEventListener('click', () => {
-    if (qty < product.stock) { qty++; renderQty(); }
+    if (qty < currentStock()) { qty++; renderQty(); }
     else showToast('No hay más stock disponible');
   });
 
-  if (outOfStock) {
-    addBtn.disabled = true;
-    addBtn.textContent = 'Sin stock';
-  }
-
   addBtn.addEventListener('click', () => {
+    const variant = currentVariant();
+    if (hasVariants && !variant) {
+      showToast('Elegí talle y color');
+      return;
+    }
+    const stock = currentStock();
+    const variantId = variant ? variant.id : null;
+    const variantLabel = variant ? [variant.size, variant.color].filter(Boolean).join(' / ') : '';
+    const key = `${product.id}::${variantId ?? ''}`;
+
     const cart = loadCart();
-    const existing = cart.find(i => i.id === product.id);
+    const existing = cart.find(i => i.key === key);
     const qtyInCart = existing ? existing.qty : 0;
 
-    if (qtyInCart + qty > product.stock) {
+    if (qtyInCart + qty > stock) {
       showToast('No hay más stock disponible');
       return;
     }
@@ -153,6 +264,9 @@ async function init() {
     } else {
       cart.push({
         id: product.id,
+        variantId,
+        variantLabel,
+        key,
         name: product.name,
         cat: catName,
         price: product.price,

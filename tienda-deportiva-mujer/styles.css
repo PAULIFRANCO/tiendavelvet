@@ -694,10 +694,26 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 500; letter-spac
 .pd-price { font-weight: 700; font-size: 1.4rem; color: var(--accent); }
 .pd-price small { font-weight: 400; color: var(--gray); text-decoration: line-through; margin-right: 8px; font-size: 1rem; }
 .pd-badge { background: var(--accent); color: var(--white); font-size: 0.7rem; font-weight: 600; padding: 5px 12px; border-radius: 100px; }
-.pd-stock { font-size: 0.9rem; color: var(--gray); margin-bottom: 28px; }
+.pd-stock { font-size: 0.9rem; color: var(--gray); margin-bottom: 22px; }
 .pd-stock--out { color: #a13d3d; }
 
-.pd-qty { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+.pd-variant-group { margin-bottom: 20px; }
+.pd-variant-label { display: block; font-size: 0.78rem; font-weight: 700; color: var(--black); margin-bottom: 10px; }
+.pd-variant-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.pd-pill {
+  padding: 9px 18px;
+  border-radius: 100px;
+  border: 1.5px solid var(--gray-light);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--black);
+  background: var(--white);
+  transition: all 0.2s ease;
+}
+.pd-pill:hover { border-color: var(--accent); }
+.pd-pill.active { background: var(--black); border-color: var(--black); color: var(--white); }
+
+.pd-qty { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; margin-top: 4px; }
 .pd-qty button {
   width: 38px; height: 38px;
   border-radius: 50%;

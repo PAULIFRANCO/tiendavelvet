@@ -25,29 +25,52 @@ loadCategories();
 
 async function loadProducts() {
   const supabase = await getSupabase();
-  const { data, error } = await supabase.from('products').select('*').order('id');
+  const [{ data, error }, { data: variantsData, error: variantsError }] = await Promise.all([
+    supabase.from('products').select('*').order('id'),
+    supabase.from('product_variants').select('*'),
+  ]);
   if (error) {
     console.error('Error al cargar productos:', error);
     return;
   }
-  PRODUCTS = data.map(p => ({
-    id: p.id,
-    name: p.name,
-    cat: p.cat,
-    price: p.price,
-    oldPrice: p.old_price,
-    badge: p.badge,
-    color: p.color,
-    image: p.image_url,
-    stock: p.stock,
-  }));
+  if (variantsError) console.error('Error al cargar variantes:', variantsError);
+
+  PRODUCTS = data.map(p => {
+    const variants = (variantsData || []).filter(v => v.product_id === p.id);
+    const hasVariants = variants.length > 0;
+    return {
+      id: p.id,
+      name: p.name,
+      cat: p.cat,
+      price: p.price,
+      oldPrice: p.old_price,
+      badge: p.badge,
+      color: p.color,
+      image: p.image_url,
+      // Si el producto tiene talles/colores cargados, el stock real que
+      // importa para saber si hay algo disponible es la suma de sus
+      // variantes, no el número viejo de "Stock" del producto.
+      stock: hasVariants ? variants.reduce((s, v) => s + v.stock, 0) : p.stock,
+      // El "+" rápido de la tarjeta no alcanza para estos: hay que elegir
+      // talle/color en la ficha del producto.
+      hasVariants,
+    };
+  });
   renderProducts();
 }
 
 function loadCart() {
   try {
     const stored = JSON.parse(localStorage.getItem(CART_KEY));
-    return Array.isArray(stored) ? stored : [];
+    if (!Array.isArray(stored)) return [];
+    // Carritos guardados antes de que existieran los talles/colores no
+    // tienen "key" — se la completamos para que sigan funcionando.
+    return stored.map(item => ({
+      variantId: null,
+      variantLabel: '',
+      ...item,
+      key: item.key || `${item.id}::${item.variantId ?? ''}`,
+    }));
   } catch {
     return [];
   }
@@ -83,7 +106,9 @@ function renderProducts() {
         </a>
         <div class="product-price-row">
           <span class="product-price">${p.oldPrice ? `<small>${fmt(p.oldPrice)}</small>` : ''}${fmt(p.price)}</span>
-          <button class="add-btn" data-add="${p.id}" aria-label="Agregar al carrito" ${outOfStock ? 'disabled' : ''}>+</button>
+          ${p.hasVariants
+            ? `<a href="producto.html?id=${p.id}" class="add-btn" aria-label="Elegir talle y color">⋯</a>`
+            : `<button class="add-btn" data-add="${p.id}" aria-label="Agregar al carrito" ${outOfStock ? 'disabled' : ''}>+</button>`}
         </div>
       </div>
     </div>
@@ -125,13 +150,18 @@ const cartItemsEl = document.getElementById('cartItems');
 const cartCountEl = document.getElementById('cartCount');
 const cartTotalEl = document.getElementById('cartTotal');
 
+// El carrito puede tener el mismo producto varias veces con distinto talle/
+// color: cada combinación es un renglón aparte, identificado por esta clave.
+const cartKey = (id, variantId) => `${id}::${variantId ?? ''}`;
+
 function addToCart(id) {
   const product = PRODUCTS.find(p => p.id === id);
   if (!product || product.stock <= 0) {
     showToast('Producto sin stock');
     return;
   }
-  const existing = cart.find(i => i.id === id);
+  const key = cartKey(id, null);
+  const existing = cart.find(i => i.key === key);
   const qtyInCart = existing ? existing.qty : 0;
   if (qtyInCart + 1 > product.stock) {
     showToast('No hay más stock disponible');
@@ -140,7 +170,7 @@ function addToCart(id) {
   if (existing) {
     existing.qty++;
   } else {
-    cart.push({ ...product, qty: 1 });
+    cart.push({ ...product, variantId: null, variantLabel: '', key, qty: 1 });
   }
   saveCart();
   renderCart();
@@ -148,17 +178,17 @@ function addToCart(id) {
   openCart();
 }
 
-function changeQty(id, delta) {
-  const item = cart.find(i => i.id === id);
+function changeQty(key, delta) {
+  const item = cart.find(i => i.key === key);
   if (!item) return;
   item.qty += delta;
-  if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
+  if (item.qty <= 0) cart = cart.filter(i => i.key !== key);
   saveCart();
   renderCart();
 }
 
-function removeFromCart(id) {
-  cart = cart.filter(i => i.id !== id);
+function removeFromCart(key) {
+  cart = cart.filter(i => i.key !== key);
   saveCart();
   renderCart();
 }
@@ -175,20 +205,20 @@ function renderCart() {
   }
 
   cartItemsEl.innerHTML = cart.map(item => `
-    <div class="cart-item" data-id="${item.id}">
+    <div class="cart-item" data-key="${item.key}">
       <div class="cart-item__img" style="${item.image ? `background-image:url('${item.image}');background-size:cover;background-position:center;` : `background:${item.color}`}"></div>
       <div class="cart-item__info">
         <h4>${item.name}</h4>
-        <span>${item.cat}</span>
+        <span>${item.cat}${item.variantLabel ? ` · ${item.variantLabel}` : ''}</span>
         <div class="cart-item__row">
           <div class="qty-control">
-            <button data-qty="minus" data-id="${item.id}">−</button>
+            <button data-qty="minus" data-key="${item.key}">−</button>
             <span>${item.qty}</span>
-            <button data-qty="plus" data-id="${item.id}">+</button>
+            <button data-qty="plus" data-key="${item.key}">+</button>
           </div>
           <span class="cart-item__price">${fmt(item.qty * item.price)}</span>
         </div>
-        <button class="cart-item__remove" data-remove="${item.id}">Eliminar</button>
+        <button class="cart-item__remove" data-remove="${item.key}">Eliminar</button>
       </div>
     </div>
   `).join('');
@@ -199,12 +229,11 @@ renderCart();
 cartItemsEl.addEventListener('click', e => {
   const qtyBtn = e.target.closest('[data-qty]');
   if (qtyBtn) {
-    const id = Number(qtyBtn.dataset.id);
-    changeQty(id, qtyBtn.dataset.qty === 'plus' ? 1 : -1);
+    changeQty(qtyBtn.dataset.key, qtyBtn.dataset.qty === 'plus' ? 1 : -1);
     return;
   }
   const removeBtn = e.target.closest('[data-remove]');
-  if (removeBtn) removeFromCart(Number(removeBtn.dataset.remove));
+  if (removeBtn) removeFromCart(removeBtn.dataset.remove);
 });
 
 function openCart() {
@@ -289,7 +318,7 @@ checkoutForm.addEventListener('submit', async e => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        items: cart.map(item => ({ id: item.id, qty: item.qty })),
+        items: cart.map(item => ({ id: item.id, qty: item.qty, variantId: item.variantId })),
         payerEmail: document.getElementById('shipEmail').value.trim(),
         shipping: {
           fullName: document.getElementById('shipFullName').value.trim(),
