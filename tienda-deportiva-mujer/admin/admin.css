@@ -355,6 +355,55 @@ table { border-collapse: collapse; width: 100%; }
   font-size: 0.78rem;
 }
 
+/* ==================== DESCRIPCIÓN Y TABLA DE TALLES ==================== */
+.details-row td { padding: 0; border-bottom: 1px solid var(--gray-light); }
+.details-panel {
+  background: #f7f5f1;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  max-width: 620px;
+}
+.details-panel__block { display: flex; flex-direction: column; gap: 8px; }
+.details-panel__label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--gray);
+}
+.details-textarea {
+  width: 100%;
+  min-height: 70px;
+  padding: 10px 12px;
+  border: 1px solid var(--gray-light);
+  border-radius: 2px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  resize: vertical;
+}
+.details-panel .btn--small { align-self: flex-start; }
+
+.size-chart-table { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
+.size-chart-table th {
+  text-align: left;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--gray);
+  padding: 6px 8px 6px 0;
+}
+.size-chart-table td { padding: 4px 8px 4px 0; }
+.size-chart-table input {
+  width: 70px;
+  padding: 6px 8px;
+  border: 1px solid var(--gray-light);
+  border-radius: 2px;
+  font-size: 0.82rem;
+}
+.size-chart-actions { display: flex; align-items: center; gap: 16px; }
+
 /* ==================== TOAST ==================== */
 .toast {
   position: fixed;

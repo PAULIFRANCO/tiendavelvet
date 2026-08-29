@@ -252,7 +252,7 @@ function fillCategorySelect(select, categories, selectedSlug) {
 
 async function loadProducts(supabase) {
   const tbody = document.getElementById('productsBody');
-  tbody.innerHTML = '<tr><td colspan="8" class="admin-empty">Cargando productos...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="9" class="admin-empty">Cargando productos...</td></tr>';
 
   const [{ data, error }, categories, { data: allVariants, error: variantsError }] = await Promise.all([
     supabase.from('products').select('*').order('id'),
@@ -264,7 +264,7 @@ async function loadProducts(supabase) {
   if (newProductCat) fillCategorySelect(newProductCat, categories);
 
   if (error) {
-    tbody.innerHTML = '<tr><td colspan="8" class="admin-empty">No se pudieron cargar los productos.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" class="admin-empty">No se pudieron cargar los productos.</td></tr>';
     console.error(error);
     return;
   }
@@ -309,9 +309,14 @@ async function loadProducts(supabase) {
           ${variants.length > 0 ? `Gestionar (${variants.length})` : 'Agregar talles'}
         </button>
       </td>
+      <td>
+        <button type="button" class="btn-link" data-toggle-details="${p.id}">
+          ${p.description || (p.size_chart || []).length > 0 ? 'Editar detalles' : 'Agregar detalles'}
+        </button>
+      </td>
     </tr>
     <tr class="variants-row" data-variants-for="${p.id}" hidden>
-      <td colspan="8">
+      <td colspan="9">
         <div class="variants-panel">
           <table class="variants-table">
             <thead><tr><th>Talle</th><th>Color</th><th>Stock</th><th></th></tr></thead>
@@ -332,6 +337,41 @@ async function loadProducts(supabase) {
             <input type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Stock" data-variant-new-stock required>
             <button type="submit" class="btn btn--outline">+ Agregar</button>
           </form>
+        </div>
+      </td>
+    </tr>
+    <tr class="details-row" data-details-for="${p.id}" hidden>
+      <td colspan="9">
+        <div class="details-panel">
+          <div class="details-panel__block">
+            <label class="details-panel__label" for="desc-${p.id}">Descripción</label>
+            <textarea id="desc-${p.id}" class="details-textarea" data-description="${p.id}" placeholder="Ej: Legging de compresión suave, tela transpirable, ideal para entrenar o usar en el día a día.">${escapeHtml(p.description || '')}</textarea>
+            <button type="button" class="btn btn--outline btn--small" data-save-description="${p.id}">Guardar descripción</button>
+          </div>
+          <div class="details-panel__block">
+            <span class="details-panel__label">Guía de talles</span>
+            <table class="size-chart-table" data-size-chart-table="${p.id}">
+              <thead>
+                <tr><th>Talle</th><th>Busto</th><th>Cintura</th><th>Cadera</th><th>Largo</th><th></th></tr>
+              </thead>
+              <tbody>
+                ${(p.size_chart || []).map((row, i) => `
+                  <tr data-row="${i}">
+                    <td><input type="text" data-sc-field="size" value="${escapeHtml(row.size || '')}"></td>
+                    <td><input type="text" data-sc-field="bust" value="${escapeHtml(row.bust || '')}"></td>
+                    <td><input type="text" data-sc-field="waist" value="${escapeHtml(row.waist || '')}"></td>
+                    <td><input type="text" data-sc-field="hip" value="${escapeHtml(row.hip || '')}"></td>
+                    <td><input type="text" data-sc-field="length" value="${escapeHtml(row.length || '')}"></td>
+                    <td><button type="button" class="variant-remove" data-remove-sc-row="${i}" aria-label="Borrar fila">✕</button></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            <div class="size-chart-actions">
+              <button type="button" class="btn-link" data-add-sc-row="${p.id}">+ Agregar fila</button>
+              <button type="button" class="btn btn--outline btn--small" data-save-sc="${p.id}">Guardar tabla de talles</button>
+            </div>
+          </div>
         </div>
       </td>
     </tr>
@@ -524,6 +564,75 @@ async function loadProducts(supabase) {
         const row = tbody.querySelector(`[data-variants-for="${productId}"]`);
         if (row) row.hidden = false;
       });
+    });
+  });
+
+  // ==================== DESCRIPCIÓN Y TABLA DE TALLES ====================
+  tbody.querySelectorAll('[data-toggle-details]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.toggleDetails;
+      const row = tbody.querySelector(`[data-details-for="${id}"]`);
+      if (row) row.hidden = !row.hidden;
+    });
+  });
+
+  tbody.querySelectorAll('[data-save-description]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = Number(btn.dataset.saveDescription);
+      const textarea = tbody.querySelector(`[data-description="${id}"]`);
+      const { error: updateError } = await supabase
+        .from('products')
+        .update({ description: textarea.value.trim() || null })
+        .eq('id', id);
+      showToast(updateError ? 'No se pudo guardar la descripción' : 'Descripción guardada');
+    });
+  });
+
+  tbody.querySelectorAll('[data-add-sc-row]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.addScRow;
+      const table = tbody.querySelector(`[data-size-chart-table="${id}"] tbody`);
+      const rowIndex = table.children.length;
+      const tr = document.createElement('tr');
+      tr.dataset.row = rowIndex;
+      tr.innerHTML = `
+        <td><input type="text" data-sc-field="size"></td>
+        <td><input type="text" data-sc-field="bust"></td>
+        <td><input type="text" data-sc-field="waist"></td>
+        <td><input type="text" data-sc-field="hip"></td>
+        <td><input type="text" data-sc-field="length"></td>
+        <td><button type="button" class="variant-remove" data-remove-sc-row="${rowIndex}" aria-label="Borrar fila">✕</button></td>
+      `;
+      table.appendChild(tr);
+    });
+  });
+
+  // Delegamos el borrado de filas (las agregadas dinámicamente no tienen
+  // su propio listener todavía).
+  tbody.querySelectorAll('[data-size-chart-table]').forEach(table => {
+    table.addEventListener('click', e => {
+      const removeBtn = e.target.closest('[data-remove-sc-row]');
+      if (removeBtn) removeBtn.closest('tr').remove();
+    });
+  });
+
+  tbody.querySelectorAll('[data-save-sc]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = Number(btn.dataset.saveSc);
+      const table = tbody.querySelector(`[data-size-chart-table="${id}"]`);
+      const rows = [...table.querySelectorAll('tbody tr')].map(tr => ({
+        size: tr.querySelector('[data-sc-field="size"]').value.trim(),
+        bust: tr.querySelector('[data-sc-field="bust"]').value.trim(),
+        waist: tr.querySelector('[data-sc-field="waist"]').value.trim(),
+        hip: tr.querySelector('[data-sc-field="hip"]').value.trim(),
+        length: tr.querySelector('[data-sc-field="length"]').value.trim(),
+      })).filter(row => row.size || row.bust || row.waist || row.hip || row.length);
+
+      const { error: updateError } = await supabase
+        .from('products')
+        .update({ size_chart: rows })
+        .eq('id', id);
+      showToast(updateError ? 'No se pudo guardar la tabla de talles' : 'Tabla de talles guardada');
     });
   });
 }
