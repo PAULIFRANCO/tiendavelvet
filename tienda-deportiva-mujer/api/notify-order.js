@@ -15,7 +15,10 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Solo una administradora logueada puede cambiar el estado de un pedido.
+    // Solo la administradora (no cualquier usuario logueado) puede cambiar el
+    // estado de un pedido. Estar autenticada no alcanza: si alguien se registrara
+    // una cuenta propia en Supabase Auth, igual tendría un token "válido" —
+    // por eso comparamos también el email contra ADMIN_EMAIL.
     const authHeader = req.headers.authorization || '';
     const token = authHeader.replace('Bearer ', '');
     if (!token) return res.status(401).json({ error: 'No autorizado' });
@@ -23,6 +26,9 @@ export default async function handler(req, res) {
     const { data: userData, error: authError } = await supabase.auth.getUser(token);
     if (authError || !userData?.user) {
       return res.status(401).json({ error: 'No autorizado' });
+    }
+    if (!process.env.ADMIN_EMAIL || userData.user.email !== process.env.ADMIN_EMAIL) {
+      return res.status(403).json({ error: 'No autorizado' });
     }
 
     const { orderId, fulfillmentStatus } = req.body ?? {};
